@@ -19,14 +19,19 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter, 
     epilog="Example of usage:\npython app.py tobb 1000 output.csv\n"
     )
-parser.add_argument("input", metavar="input", help="[REQUIRED] Topic word, to seach in twitter")
+parser.add_argument("input", metavar="input", help="[REQUIRED] Topic word, to seach in twitter, to search more than one word add quotes around string")
 parser.add_argument("min", metavar="min", nargs="?", help="Minimum tweet count, default 100", default=100)
-parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.tsv", default="output.tsv")
-# parser.add_argument("-c", "--click", metavar="click", help="Clicks on tweets to check if retweet or not")
+parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="output.csv")
+parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
 args = parser.parse_args()
+
 output = args.output
-if  output.find(".csv") == -1 or output.find(".tsv") == -1:
-    output = output + ".csv"
+if  output.find(".csv") == -1:
+    if output.find("."):
+        output = output.split(".")[0] + ".csv"
+        print(t.colored("Non csv file given as output format. Changing to " + output, "yellow"))
+    else:
+        output = output + ".csv"
 
 # Create DataFrame
 
@@ -42,7 +47,8 @@ df = pd.DataFrame(columns = [
 print("Creating Chrome Web Driver...", end = "\r")
 options = webdriver.ChromeOptions()
 options.binary_location = r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
-#options.add_argument('--headless')
+if args.browser is not True:
+    options.add_argument('--headless')
 options.add_argument("--lang=en")
 options.add_experimental_option('excludeSwitches', ['enable-logging'])
 print("Creating Chrome Web Driver..." + t.colored("Done", "green"))
@@ -53,23 +59,20 @@ print("Starting Chrome Web Driver...", end = "\r")
 driver = webdriver.Chrome(executable_path=r'chromedriver.exe', options=options)
 print("Starting Chrome Web Driver..." + t.colored("Done", "green"))
 url = "https://twitter.com/search?q=" + args.input + "&src=typed_query"
-print("Waiting page to create DOM...", end = "\r")
+print("Waiting page to open...", end = "\r")
 driver.get(url)
 wait = WebDriverWait(driver, 10)
-print("Waiting page to create DOM..." + t.colored("Done", "green"))
+print("Waiting page to open..." + t.colored("Done", "green"))
 print("Scraping url  " + t.colored(url, "blue"))
-wait.until(presence_of_element_located((By.CSS_SELECTOR, "main[role='main']")))
-try:
-    column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
-except NoSuchElementException:
-    sys.exit(t.colored("Error occured wile loading page! re-run this script after couple seconds, terminating...", "red"))
 print("Waiting DOM to get ready...", end = "\r")
+wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
+column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "section[role='region']")))
 print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
 # Scrap Tweets
 
-count = 1
+count = 0
 last_height = driver.execute_script("return document.body.scrollHeight")
 while count <= int(args.min):
     percent = Decimal((count / int(args.min)) * 100)
@@ -78,6 +81,9 @@ while count <= int(args.min):
     time.sleep(2)
     new_height = driver.execute_script("return document.body.scrollHeight")
     articles = column.find_elements_by_css_selector("article")
+    if len(articles) == 0:
+        print(t.colored("No tweets found !", "red"))
+        break
     try:
         for article in articles:
             tweet = article.find_element_by_css_selector("div[data-testid='tweet']")
@@ -188,12 +194,10 @@ while count <= int(args.min):
             last_height = new_height
     except StaleElementReferenceException:
         print(t.colored("Page Structure changed !", "red"))
+df = df.drop_duplicates()
 print("Completed! Total number of tweets: " + str(len(df.index)))
 driver.close()
-if output.find(".tsv") != -1:
-    df.to_csv(output, sep="\t", index=False)
-else:
-    df.to_csv(output, index=False)
+df.to_csv(output, index=False)
 
 
 
