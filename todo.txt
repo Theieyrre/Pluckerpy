@@ -1,3 +1,0 @@
--> Dosya Format hataları var .csv varsa .csv.csv oluyor
--> Headless opsiyonunu ekle. Her zaman browser olmak istenmeyebilir
--> Media yüklemeyi devre dışı bırakmak mümkün mü ?
