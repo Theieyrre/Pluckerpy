@@ -23,6 +23,7 @@ parser.add_argument("input", metavar="input", help="[REQUIRED] Topic word, to se
 parser.add_argument("min", metavar="min", nargs="?", help="Minimum tweet count, default 100", default=100)
 parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="output.csv")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
+parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
 args = parser.parse_args()
 
 output = args.output
@@ -72,7 +73,7 @@ print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
 # Scrap Tweets
 
-count = 0
+count,  threshold = 0 , 0
 last_height = driver.execute_script("return document.body.scrollHeight")
 while count <= int(args.min):
     percent = Decimal((count / int(args.min)) * 100)
@@ -137,6 +138,7 @@ while count <= int(args.min):
             except NoSuchElementException:
                 pass
 
+            mentions = ""
             try:
                 mentions_list = content.find_elements_by_css_selector("a[href^='/']")
                 mentions = ""
@@ -144,6 +146,8 @@ while count <= int(args.min):
                     mentions += mention.text
             except NoSuchElementException:
                 pass
+            if len(mentions) == 0:
+                mentions = float("NaN")
 
             quote_name = float("NaN")
             quote = ""
@@ -158,7 +162,7 @@ while count <= int(args.min):
                         continue
                     quote += span.text           
             except NoSuchElementException:
-                pass
+                quote = float("NaN")
 
             link = ""
             try:
@@ -167,6 +171,8 @@ while count <= int(args.min):
                     link += url.get_attribute("href") + " "
             except NoSuchElementException:
                 pass
+            if len(link) == 0:
+                link = float("NaN")
 
             tweet_link = "/" + name + "/status/" + tweet_id
             df = df.append({
@@ -186,8 +192,12 @@ while count <= int(args.min):
                 "mentions": mentions,
                 "links": link
             }, ignore_index = True)
-
+            threshold += 1
             count += 1
+            if threshold > int(args.threshold):
+                print(t.colored("Saving data to CSV file","yellow"), end="\r")
+                df = df.drop_duplicates()
+                df.to_csv(output, index=False, na_rep="NaN")  
             if new_height == last_height:
                 break
             last_height = new_height
@@ -196,7 +206,7 @@ while count <= int(args.min):
 df = df.drop_duplicates()
 print("Completed! Total number of tweets: " + str(len(df.index)))
 driver.close()
-df.to_csv(output, index=False)
+df.to_csv(output, index=False, na_rep="NaN")
 
 
 

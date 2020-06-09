@@ -27,4 +27,5 @@ To install dependencies with pip without virtualenv
 | min |    Minimum tweet count  |
 | output | Output file name to write csv |
 | -b, --browser | Option to open Chrome window |
+| -t, --threshold | Threshold to write to output file |
 
