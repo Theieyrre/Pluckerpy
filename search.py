@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser(
     )
 parser.add_argument("input", metavar="input", help="[REQUIRED] Topic word, to seach in twitter, to search more than one word add quotes around string")
 parser.add_argument("min", metavar="min", nargs="?", help="Minimum tweet count, default 100", default=100)
-parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="output.csv")
+parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="search.csv")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
 parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
 parser.add_argument("-c", "--click", metavar="click", nargs="?", help="OPtion to click on tweets to get source label")
@@ -73,14 +73,12 @@ print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
 # Scrap Tweets
 
+wait.until(presence_of_element_located((By.CSS_SELECTOR, "article")))
 count,  threshold = 0 , 0
 last_height = driver.execute_script("return document.body.scrollHeight")
 while count <= int(args.min):
     percent = Decimal((count / int(args.min)) * 100)
     print("Gathering Tweets  " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(2)
-    new_height = driver.execute_script("return document.body.scrollHeight")
     articles = column.find_elements_by_css_selector("article")
     if len(articles) == 0:
         print(t.colored("No tweets found !", "red"))
@@ -139,11 +137,11 @@ while count <= int(args.min):
                 except NoSuchElementException:
                     pass
                 if len(mentions) == 0:
-                    mentions = float("NaN")
+                    mentions = "-"
             except NoSuchElementException:
-                pass
+                tweet_content = "-"
 
-            media = float("NaN")
+            media = "-"
             try:
                 media = tweet.find_element_by_css_selector("video").get_attribute("src")
             except NoSuchElementException:
@@ -153,7 +151,7 @@ while count <= int(args.min):
             except NoSuchElementException:
                 pass
 
-            quote_name = float("NaN")
+            quote_name = "-"
             quote = ""
             try:
                 block_content = article.find_element_by_css_selector("div[role='blockquote']")
@@ -166,7 +164,7 @@ while count <= int(args.min):
                         continue
                     quote += span.text           
             except NoSuchElementException:
-                quote = float("NaN")
+                quote = "-"
 
             link = ""
             try:
@@ -176,7 +174,7 @@ while count <= int(args.min):
             except NoSuchElementException:
                 pass
             if len(link) == 0:
-                link = float("NaN")
+                link = "-"
 
             tweet_link = "/" + name + "/status/" + tweet_id
             tweet_dict = {
@@ -209,16 +207,19 @@ while count <= int(args.min):
             if threshold > int(args.threshold):
                 print(t.colored("Saving data to CSV file","yellow"), end="\r")
                 df = df.drop_duplicates()
-                df.to_csv(output, index=False, na_rep="NaN")  
-            if new_height == last_height:
-                break
-            last_height = new_height
+                df.to_csv(output, index=False, na_rep="-")  
     except StaleElementReferenceException:
         print(t.colored("Page Structure changed !", "red"))
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(2)
+    new_height = driver.execute_script("return document.body.scrollHeight")
+    if new_height == last_height:
+        break
+    last_height = new_height
 df = df.drop_duplicates()
 print("Completed! Total number of tweets: " + str(len(df.index)))
 driver.close()
-df.to_csv(output, index=False, na_rep="NaN")
+df.to_csv(output, index=False, na_rep="-")
 
 
 

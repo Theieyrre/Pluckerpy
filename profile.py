@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser(
     )
 parser.add_argument("input", metavar="input", help="[REQUIRED] Topic word, to seach in twitter, to search more than one word add quotes around string")
 parser.add_argument("min", metavar="min", nargs="?", help="Minimum tweet count, default 100", default=100)
-parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="output.csv")
+parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="profile.json")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
 parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
 parser.add_argument("-c", "--click", metavar="click", nargs="?", help="OPtion to click on tweets to get source label")
@@ -73,12 +73,12 @@ print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 banner = column.find_element_by_css_selector("a[href='/" + args.input + "/header_photo'")
 profile = banner.find_element_by_xpath("..")
 name_div = profile.find_elements_by_css_selector("div[dir='auto']")[1]
-name = name_div.find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
+main_name = name_div.find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
 try:
     bio = profile.find_element_by_css_selector("div[data-testid='UserDescription']").find_element_by_css_selector("span").get_attribute("innerHTML")
 except NoSuchElementException:
     bio = "-"
-data['screen_name'] = name
+data['screen_name'] = main_name
 data['name'] = args.input
 data['bio'] = bio
 
@@ -121,9 +121,6 @@ last_height = driver.execute_script("return document.body.scrollHeight")
 while count <= int(args.min):
     percent = Decimal((count / int(args.min)) * 100)
     print("Gathering Tweets  " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(2)
-    new_height = driver.execute_script("return document.body.scrollHeight")
     articles = column.find_elements_by_css_selector("article")
     if len(articles) == 0:
         print(t.colored("No tweets found !", "red"))
@@ -157,6 +154,16 @@ while count <= int(args.min):
                     likes = likes_list[0]
             except NoSuchElementException:
                 pass
+                        
+            retweet_name = "-"
+            try:
+                retweet = article.find_element_by_css_selector("span[dir='ltr']")
+                temp = name
+                name = args.input
+                retweet_name = temp
+                is_retweet = True
+            except NoSuchElementException:
+                is_retweet = False
 
             try:
                 content = tweet.find_element_by_css_selector("div[lang]")
@@ -178,7 +185,7 @@ while count <= int(args.min):
                 if len(mentions) == 0:
                     mentions = "-"
             except NoSuchElementException:
-                pass
+                tweet_content = "-"
 
             media = "-"
             try:
@@ -220,6 +227,8 @@ while count <= int(args.min):
                 'id': tweet_id,
                 'name': name,
                 'date': date,
+                'is_retweet': is_retweet,
+                'retweet_name': retweet_name,
                 'tweet': tweet_content,
                 'retweets': retweets,
                 'likes': likes,
@@ -246,13 +255,16 @@ while count <= int(args.min):
             if threshold > int(args.threshold):
                 print(t.colored("Saving data to CSV file","yellow"), end="\r")
                 output.seek(0)
-                json.dump(data, output, indent=4, ensure_ascii=False)  
-            if new_height == last_height:
-                break
-            last_height = new_height
+                json.dump(data, output, indent=4)  
     except StaleElementReferenceException:
         print(t.colored("Page Structure changed !", "red"))
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(2)
+    new_height = driver.execute_script("return document.body.scrollHeight")
+    if new_height == last_height:
+        break
+    last_height = new_height
 output.seek(0)
 print("Completed! Total number of tweets: " + str(count))
-json.dump(data, output, indent=4, ensure_ascii=False) 
+json.dump(data, output, indent=4) 
 driver.close()

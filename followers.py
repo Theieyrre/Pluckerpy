@@ -24,7 +24,7 @@ parser.add_argument("username", metavar="username", help="[REQUIRED] Username of
 parser.add_argument("password", metavar="password", help="[REQUIRED] Password of a valid Twitter Account")
 parser.add_argument("input", metavar="input", help="[REQUIRED] Topic word, to seach in twitter, to search more than one word add quotes around string")
 parser.add_argument("min", metavar="min", nargs="?", help="Minimum follower count, default 100", default=100)
-parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="output.csv")
+parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="followers.json")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
 parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
 args = parser.parse_args()
@@ -97,20 +97,19 @@ followers = {}
 while count <= int(args.min):
     percent = Decimal((count / int(args.min)) * 100)
     print("Gathering Followers " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(2)
-    new_height = driver.execute_script("return document.body.scrollHeight")
     user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
     try:
         for user in user_cells:
-            name = user.find_element_by_css_selector("div[dir='auto']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
+            screen_name = user.find_element_by_css_selector("div[dir='auto']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
             is_verified = False
             try:
                 verified = user.find_element_by_css_selector("svg[aria-label='Verified account']")
                 is_verified = True
             except NoSuchElementException:
                 pass
+            name = user.find_element_by_css_selector("a[href^='/']").get_attribute("href").split("/")[-1]
             follower = {
+                'screen_name': screen_name,
                 'name': name,
                 'is_verified': is_verified
             }
@@ -121,13 +120,16 @@ while count <= int(args.min):
             if threshold > int(args.threshold):
                 print(t.colored("Saving data to CSV file","yellow"), end="\r")
                 output.seek(0)
-                json.dump(data, output, indent=4, ensure_ascii=False)  
-            if new_height == last_height:
-                break
-            last_height = new_height
+                json.dump(data, output, indent=4)  
     except StaleElementReferenceException:
         print(t.colored("Page Structure changed !", "red"))
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(2)
+    new_height = driver.execute_script("return document.body.scrollHeight")
+    if new_height == last_height:
+        break
+    last_height = new_height
 output.seek(0)
 print("Completed! Total number of followers: " + str(count))
-json.dump(data, output, indent=4, ensure_ascii=False) 
+json.dump(data, output, indent=4) 
 driver.close()
