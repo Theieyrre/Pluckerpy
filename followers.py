@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
+from selenium.webdriver.common.keys import Keys
 
 import pandas as pd
 import termcolor as t
@@ -19,10 +20,13 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter, 
     epilog="Example of usage:\npython app.py tobb 1000 output.csv\n"
     )
+parser.add_argument("username", metavar="username", help="[REQUIRED] Username of a valid Twitter Account")
+parser.add_argument("password", metavar="password", help="[REQUIRED] Password of a valid Twitter Account")
 parser.add_argument("input", metavar="input", help="[REQUIRED] Topic word, to seach in twitter, to search more than one word add quotes around string")
-parser.add_argument("min", metavar="min", nargs="?", help="Minimum tweet count, default 100", default=100)
+parser.add_argument("min", metavar="min", nargs="?", help="Minimum follower count, default 100", default=100)
 parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="output.csv")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
+parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
 args = parser.parse_args()
 
 output = args.output
@@ -55,11 +59,20 @@ print("Creating Chrome Web Driver..." + t.colored("Done", "green"))
 print("Starting Chrome Web Driver...", end = "\r")
 driver = webdriver.Chrome(executable_path=r'chromedriver.exe', options=options)
 print("Starting Chrome Web Driver..." + t.colored("Done", "green"))
-url = "https://twitter.com/" + args.input + "/followers"
+url = "https://twitter.com/login"
 print("Waiting page to open...", end = "\r")
 driver.get(url)
 wait = WebDriverWait(driver, 10)
 print("Waiting page to open..." + t.colored("Done", "green"))
+print("Entering credentials...", end="\r")
+wait.until(presence_of_element_located((By.CSS_SELECTOR, "input[name='session[username_or_email]']")))
+username_area = driver.find_element_by_css_selector("input[name='session[username_or_email]']")
+password_area = driver.find_element_by_css_selector("input[name='session[password]']")
+username_area.send_keys(args.username)
+password_area.send_keys(args.password)
+driver.find_element_by_css_selector("div[data-testid='LoginForm_Login_Button']").click()
+
+url = "https://twitter.com/" + args.input + "/followers"
 print("Scraping url  " + t.colored(url, "blue"))
 print("Waiting DOM to get ready...", end = "\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
