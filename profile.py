@@ -1,6 +1,7 @@
 import sys, time
 import argparse
 from decimal import Decimal
+import json
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -9,7 +10,6 @@ from selenium.webdriver.support.expected_conditions import presence_of_element_l
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 
-import pandas as pd
 import termcolor as t
 
 # Parse Arguments and Print Help
@@ -28,20 +28,17 @@ parser.add_argument("-c", "--click", metavar="click", nargs="?", help="OPtion to
 args = parser.parse_args()
 
 output = args.output
-if  output.find(".csv") == -1:
+if  output.find(".json") == -1:
     if output.find("."):
-        output = output.split(".")[0] + ".csv"
-        print(t.colored("Non csv file given as output format. Changing to " + output, "yellow"))
+        output = output.split(".")[0] + ".json"
+        print(t.colored("Non json file given as output format. Changing to " + output, "yellow"))
     else:
-        output = output + ".csv"
+        output = output + ".json"
+output = open(output, "w")
 
-# Create DataFrame
+# Create Dictionary
 
-df = pd.DataFrame(columns = [
-    "id", "name", "is_verified", "date", "tweet", "likes", 
-    "replies", "retweets", "tweet_link", "lang", "media",
-    "quote_name", "quote", "mentions", "links"
-    ])
+data = {}
 
 # Web Driver Options
 
@@ -59,7 +56,7 @@ print("Creating Chrome Web Driver..." + t.colored("Done", "green"))
 print("Starting Chrome Web Driver...", end = "\r")
 driver = webdriver.Chrome(executable_path=r'chromedriver.exe', options=options)
 print("Starting Chrome Web Driver..." + t.colored("Done", "green"))
-url = "https://twitter.com/search?q=" + args.input + "&src=typed_query"
+url = "https://twitter.com/" + args.input + "/with_replies"
 print("Waiting page to open...", end = "\r")
 driver.get(url)
 wait = WebDriverWait(driver, 10)
@@ -68,12 +65,58 @@ print("Scraping url  " + t.colored(url, "blue"))
 print("Waiting DOM to get ready...", end = "\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
 column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
-wait.until(presence_of_element_located((By.CSS_SELECTOR, "section[role='region']")))
+wait.until(presence_of_element_located((By.CSS_SELECTOR, "a[href='/" + args.input + "/header_photo'")))
 print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
+
+# Scrap profile data
+
+banner = column.find_element_by_css_selector("a[href='/" + args.input + "/header_photo'")
+profile = banner.find_element_by_xpath("..")
+name_div = profile.find_elements_by_css_selector("div[dir='auto']")[1]
+name = name_div.find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
+try:
+    bio = profile.find_element_by_css_selector("div[data-testid='UserDescription']").find_element_by_css_selector("span").get_attribute("innerHTML")
+except NoSuchElementException:
+    bio = "-"
+data['screen_name'] = name
+data['name'] = args.input
+data['bio'] = bio
+
+is_verified = False
+try:
+    verified = profile.find_element_by_css_selector("svg[aria-label='Verified account']")
+    is_verified = True
+except NoSuchElementException:
+    pass
+data['is_verified'] = is_verified
+
+info_div = profile.find_element_by_css_selector("div[data-testid='UserProfileHeader_Items']")
+try:
+    link = info_div.find_element_by_css_selector("a").get_attribute("href")
+except NoSuchElementException:
+    link = "-"
+data['link'] = link
+
+spans = info_div.find_elements_by_css_selector("span")
+try:
+    location = spans[2].get_attribute("innerHTML")
+except IndexError:
+    location = "-"
+data['location'] = location
+
+register = spans[-1].get_attribute("innerHTML").split("</svg>")[1].split("Joined ")[1]
+data['register'] = register
+
+following = profile.find_element_by_css_selector("a[href='/"+ args.input +"/following']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
+data['following'] = following
+
+followers = profile.find_element_by_css_selector("a[href='/"+ args.input +"/followers']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
+data['followers'] = followers
 
 # Scrap Tweets
 
 count,  threshold = 0 , 0
+tweets = {}
 last_height = driver.execute_script("return document.body.scrollHeight")
 while count <= int(args.min):
     percent = Decimal((count / int(args.min)) * 100)
@@ -93,12 +136,6 @@ while count <= int(args.min):
             name_id = html_a.get_attribute("href").split("/")
             name = name_id[-3]
             tweet_id = name_id[-1]
-            is_verified = False
-            try:
-                verified = tweet.find_element_by_css_selector("svg[aria-label='Verified account']")
-                is_verified = True
-            except NoSuchElementException:
-                pass
             replies = 0
             retweets = 0
             likes = 0
@@ -139,11 +176,11 @@ while count <= int(args.min):
                 except NoSuchElementException:
                     pass
                 if len(mentions) == 0:
-                    mentions = float("NaN")
+                    mentions = "-"
             except NoSuchElementException:
                 pass
 
-            media = float("NaN")
+            media = "-"
             try:
                 media = tweet.find_element_by_css_selector("video").get_attribute("src")
             except NoSuchElementException:
@@ -153,7 +190,7 @@ while count <= int(args.min):
             except NoSuchElementException:
                 pass
 
-            quote_name = float("NaN")
+            quote_name = "-"
             quote = ""
             try:
                 block_content = article.find_element_by_css_selector("div[role='blockquote']")
@@ -166,7 +203,7 @@ while count <= int(args.min):
                         continue
                     quote += span.text           
             except NoSuchElementException:
-                quote = float("NaN")
+                quote = "-"
 
             link = ""
             try:
@@ -176,49 +213,45 @@ while count <= int(args.min):
             except NoSuchElementException:
                 pass
             if len(link) == 0:
-                link = float("NaN")
+                link = "-"
 
             tweet_link = "/" + name + "/status/" + tweet_id
             tweet_dict = {
-                "id": tweet_id,
-                "name": name,
-                "is_verified": is_verified,
-                "date": date,
-                "tweet": tweet_content,
-                "retweets": retweets,
-                "likes": likes,
-                "replies": replies,
-                "tweet_link": tweet_link,
-                "lang": lang,
-                "media": media,
-                "quote_name": quote_name,
-                "quote": quote,
-                "mentions": mentions,
-                "links": link
+                'id': tweet_id,
+                'name': name,
+                'date': date,
+                'tweet': tweet_content,
+                'retweets': retweets,
+                'likes': likes,
+                'replies': replies,
+                'tweet_link': tweet_link,
+                'lang': lang,
+                'media': media,
+                'quote_name': quote_name,
+                'quote': quote,
+                'mentions': mentions,
+                'links': link
             }
             if args.click is not None:
                 content.click()
                 wait.until(presence_of_element_located((By.CSS_SELECTOR, "a[href$='/how-to-tweet#source-labels']")))
                 source_element = driver.find_element_by_css_selector("a[href$='/how-to-tweet#source-labels']")
                 source = source_element.find_element_by_css_selector("span").get_attribute("innerHTML")
-                tweet_dict["source"] = source
+                tweet_dict['source'] = source
                 driver.back()
-            df = df.append(tweet_dict, ignore_index = True)
+            tweets[count] = tweet_dict
+            data["tweets"] = tweets
             threshold += 1
             count += 1
             if threshold > int(args.threshold):
                 print(t.colored("Saving data to CSV file","yellow"), end="\r")
-                df = df.drop_duplicates()
-                df.to_csv(output, index=False, na_rep="NaN")  
+                output.seek(0)
+                json.dump(data, output)  
             if new_height == last_height:
                 break
             last_height = new_height
     except StaleElementReferenceException:
         print(t.colored("Page Structure changed !", "red"))
-df = df.drop_duplicates()
-print("Completed! Total number of tweets: " + str(len(df.index)))
+output.seek(0)
+json.dump(data, output) 
 driver.close()
-df.to_csv(output, index=False, na_rep="NaN")
-
-
-
