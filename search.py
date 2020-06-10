@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
+from selenium.webdriver.common.keys import Keys
 
 import pandas as pd
 import termcolor as t
@@ -24,7 +25,7 @@ parser.add_argument("min", metavar="min", nargs="?", help="Minimum tweet count, 
 parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="search.csv")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
 parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
-parser.add_argument("-c", "--click", metavar="click", nargs="?", help="OPtion to click on tweets to get source label")
+parser.add_argument("-c", "--click", action='store_true', help="OPtion to click on tweets to get source label")
 args = parser.parse_args()
 
 output = args.output
@@ -73,6 +74,7 @@ print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
 # Scrap Tweets
 
+window_before = driver.window_handles[0]
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "article")))
 count,  threshold = 0 , 0
 last_height = driver.execute_script("return document.body.scrollHeight")
@@ -195,12 +197,15 @@ while count <= int(args.min):
                 "links": link
             }
             if args.click is not None:
-                content.click()
+                driver.execute_script("window.open('{}');".format(link))
+                window_after = driver.window_handles[1]
+                driver.switch_to.window(window_after)
+                driver.get("https://twitter.com" + tweet_link)
                 wait.until(presence_of_element_located((By.CSS_SELECTOR, "a[href$='/how-to-tweet#source-labels']")))
                 source_element = driver.find_element_by_css_selector("a[href$='/how-to-tweet#source-labels']")
                 source = source_element.find_element_by_css_selector("span").get_attribute("innerHTML")
                 tweet_dict["source"] = source
-                driver.back()
+                driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + 'w') 
             df = df.append(tweet_dict, ignore_index = True)
             threshold += 1
             count += 1
