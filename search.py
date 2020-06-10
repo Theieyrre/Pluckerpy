@@ -15,7 +15,7 @@ import termcolor as t
 # Parse Arguments and Print Help
 
 parser = argparse.ArgumentParser(
-    description='Get followers of a Twitter user', 
+    description='Get tweets of a topic', 
     formatter_class=argparse.RawTextHelpFormatter, 
     epilog="Example of usage:\npython app.py tobb 1000 output.csv\n"
     )

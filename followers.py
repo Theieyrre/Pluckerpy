@@ -1,6 +1,7 @@
 import sys, time
 import argparse
 from decimal import Decimal
+import json
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -10,7 +11,6 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.keys import Keys
 
-import pandas as pd
 import termcolor as t
 
 # Parse Arguments and Print Help
@@ -30,18 +30,17 @@ parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="T
 args = parser.parse_args()
 
 output = args.output
-if  output.find(".csv") == -1:
+if  output.find(".json") == -1:
     if output.find("."):
-        output = output.split(".")[0] + ".csv"
-        print(t.colored("Non csv file given as output format. Changing to " + output, "yellow"))
+        output = output.split(".")[0] + ".json"
+        print(t.colored("Non json file given as output format. Changing to " + output, "yellow"))
     else:
-        output = output + ".csv"
+        output = output + ".json"
+output = open(output, "w")
 
-# Create DataFrame
+# Create Dictionary
 
-df = pd.DataFrame(columns = [
-    "username", "follower_name"
-])
+data = {'name': args.input}
 
 # Web Driver Options
 
@@ -71,8 +70,13 @@ password_area = driver.find_element_by_css_selector("input[name='session[passwor
 username_area.send_keys(args.username)
 password_area.send_keys(args.password)
 driver.find_element_by_css_selector("div[data-testid='LoginForm_Login_Button']").click()
-
+if driver.current_url.find("error") != -1:
+    driver.close()
+    sys.exit(t.colored("Wrong Username/Password !", "red"))
+else:
+    print(t.colored(" * Login successful ! * ", "green"), end="\r")
 url = "https://twitter.com/" + args.input + "/followers"
+driver.get(url)
 print("Scraping url  " + t.colored(url, "blue"))
 print("Waiting DOM to get ready...", end = "\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
@@ -80,32 +84,50 @@ column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "section[role='region']")))
 print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
+# Get Name
+
+screen_name = column.find_element_by_css_selector("h2[aria-level='2']").find_element_by_css_selector("span").get_attribute("innerHTML")
+data["screen_name"] = screen_name
+
 # Scrap Followers
 
-count = 0
+count, threshold = 0, 0
 last_height = driver.execute_script("return document.body.scrollHeight")
+followers = {}
 while count <= int(args.min):
     percent = Decimal((count / int(args.min)) * 100)
-    print("Gathering Tweets " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
+    print("Gathering Followers " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(2)
     new_height = driver.execute_script("return document.body.scrollHeight")
     user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
     try:
         for user in user_cells:
-            html_a = user.find_element_by_css_selector("a[dir='auto']")
-            date = html_a.find_element_by_css_selector("time").get_attribute("datetime")
-            name_id = html_a.get_attribute("href").split("/")
-            print(name_id.get_attribute("outerHTML"))
+            name = user.find_element_by_css_selector("div[dir='auto']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
             is_verified = False
             try:
                 verified = user.find_element_by_css_selector("svg[aria-label='Verified account']")
                 is_verified = True
             except NoSuchElementException:
                 pass
+            follower = {
+                'name': name,
+                'is_verified': is_verified
+            }
+            followers[count] = follower
+            data["followers"] = followers
+            threshold += 1
             count += 1
+            if threshold > int(args.threshold):
+                print(t.colored("Saving data to CSV file","yellow"), end="\r")
+                output.seek(0)
+                json.dump(data, output, indent=4, ensure_ascii=False)  
             if new_height == last_height:
                 break
             last_height = new_height
     except StaleElementReferenceException:
         print(t.colored("Page Structure changed !", "red"))
+output.seek(0)
+print("Completed! Total number of followers: " + str(count))
+json.dump(data, output, indent=4, ensure_ascii=False) 
+driver.close()

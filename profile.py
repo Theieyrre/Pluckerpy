@@ -15,7 +15,7 @@ import termcolor as t
 # Parse Arguments and Print Help
 
 parser = argparse.ArgumentParser(
-    description='Get followers of a Twitter user', 
+    description='Get profile and tweets of a Twitter user', 
     formatter_class=argparse.RawTextHelpFormatter, 
     epilog="Example of usage:\npython app.py tobb 1000 output.csv\n"
     )
@@ -246,12 +246,13 @@ while count <= int(args.min):
             if threshold > int(args.threshold):
                 print(t.colored("Saving data to CSV file","yellow"), end="\r")
                 output.seek(0)
-                json.dump(data, output)  
+                json.dump(data, output, indent=4, ensure_ascii=False)  
             if new_height == last_height:
                 break
             last_height = new_height
     except StaleElementReferenceException:
         print(t.colored("Page Structure changed !", "red"))
 output.seek(0)
-json.dump(data, output) 
+print("Completed! Total number of tweets: " + str(count))
+json.dump(data, output, indent=4, ensure_ascii=False) 
 driver.close()

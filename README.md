@@ -41,3 +41,17 @@ To install dependencies with pip without virtualenv
 | -b, --browser | Option to open Chrome window |
 | -t, --threshold | Threshold to write to output file |
 
+### Followers Scraping
+
+> python followers.py pluckerpy password123 github 50 test
+
+| Parameters   |      Description      |
+|----------|:-------------:|
+| username |  [REQUIRED] Username of a valid Twitter Account |
+| password |  [REQUIRED] Password of a valid Twitter Account |
+| input |  [REQUIRED] Name of profile without @ |
+| min |    Minimum tweet count  |
+| output | Output file name to write json |
+| -b, --browser | Option to open Chrome window |
+| -t, --threshold | Threshold to write to output file |
+
