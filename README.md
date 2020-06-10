@@ -9,18 +9,22 @@
 ## Install
 
 If you have pipenv installed run to install dependencies and create virtualenv 
-> pipenv install
-> pipenv shell
+```
+pipenv install
+pipenv shell
+```
 
 To install dependencies with pip without virtualenv 
-> pip install -r requirements.txt
+```
+pip install -r requirements.txt
+```
 
 ## Run 
 
 ### Search Scraping
-
-> python search.py github 50 test
-
+```
+python search.py github 50 test
+```
 | Parameters   |      Description      |
 |----------|:-------------:|
 | input |  [REQUIRED] Topic word, to seach in twitter|
@@ -30,9 +34,9 @@ To install dependencies with pip without virtualenv
 | -t, --threshold | Threshold to write to output file |
 
 ### Profile Scraping
-
-> python profile.py github 50 test
-
+```
+python profile.py github 50 test
+```
 | Parameters   |      Description      |
 |----------|:-------------:|
 | input |  [REQUIRED] Name of profile without @ |
@@ -42,9 +46,9 @@ To install dependencies with pip without virtualenv
 | -t, --threshold | Threshold to write to output file |
 
 ### Followers Scraping
-
-> python followers.py pluckerpy password123 github 50 test
-
+```
+python followers.py pluckerpy password123 github 50 test
+```
 | Parameters   |      Description      |
 |----------|:-------------:|
 | username |  [REQUIRED] Username of a valid Twitter Account |
