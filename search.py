@@ -197,15 +197,17 @@ while count <= int(args.min):
                 "links": link
             }
             if args.click is not None:
-                driver.execute_script("window.open('{}');".format(link))
+                driver.execute_script("window.open('{}');".format(tweet_link))
                 window_after = driver.window_handles[1]
+                window_before = driver.window_handles[0]
                 driver.switch_to.window(window_after)
                 driver.get("https://twitter.com" + tweet_link)
                 wait.until(presence_of_element_located((By.CSS_SELECTOR, "a[href$='/how-to-tweet#source-labels']")))
                 source_element = driver.find_element_by_css_selector("a[href$='/how-to-tweet#source-labels']")
                 source = source_element.find_element_by_css_selector("span").get_attribute("innerHTML")
                 tweet_dict["source"] = source
-                driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + 'w') 
+                driver.execute_script("window.close();") 
+                driver.switch_to.window(window_before)
             df = df.append(tweet_dict, ignore_index = True)
             threshold += 1
             count += 1

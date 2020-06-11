@@ -25,7 +25,7 @@ parser.add_argument("min", metavar="min", nargs="?", help="Minimum tweet count, 
 parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="profile.json")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
 parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
-parser.add_argument("-c", "--click", metavar="click", nargs="?", help="Option to click on tweets to get source label")
+parser.add_argument("-c", "--click", action='store_true', help="Option to click on tweets to get source label")
 args = parser.parse_args()
 
 output = args.output
@@ -293,12 +293,17 @@ while count <= max:
                 'links': link
             }
             if args.click is not None:
-                content.click()
+                driver.execute_script("window.open('{}');".format(tweet_link))
+                window_after = driver.window_handles[1]
+                window_before = driver.window_handles[0]
+                driver.switch_to.window(window_after)
+                driver.get("https://twitter.com" + tweet_link)
                 wait.until(presence_of_element_located((By.CSS_SELECTOR, "a[href$='/how-to-tweet#source-labels']")))
                 source_element = driver.find_element_by_css_selector("a[href$='/how-to-tweet#source-labels']")
                 source = source_element.find_element_by_css_selector("span").get_attribute("innerHTML")
-                tweet_dict['source'] = source
-                driver.back() 
+                tweet_dict["source"] = source
+                driver.execute_script("window.close();") 
+                driver.switch_to.window(window_before)
             if tweet_dict["id"] not in variable.values():
                 tweets[count] = tweet_dict
                 data["tweets"] = tweets
@@ -308,7 +313,9 @@ while count <= max:
             if threshold > int(args.threshold):
                 print(t.colored("Saving data to CSV file","yellow"), end="\r")
                 output.seek(0)
-                json.dump(data, output, indent=4)  
+                json.dump(data, output, indent=4)
+            if count >= max:
+                break  
     except StaleElementReferenceException:
         print(t.colored("Page Structure changed !", "red"))
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
