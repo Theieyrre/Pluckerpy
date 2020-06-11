@@ -37,6 +37,8 @@ python search.py github 50 test
 ```
 python profile.py github 50 test
 ```
+To get all tweets of a user, set min to -1
+
 | Parameters   |      Description      |
 |----------|:-------------:|
 | input |  [REQUIRED] Name of profile without @ |
@@ -49,6 +51,9 @@ python profile.py github 50 test
 ```
 python followers.py pluckerpy password123 github 50 test
 ```
+
+To get all followers of a user, set min to -1
+
 | Parameters   |      Description      |
 |----------|:-------------:|
 | username |  [REQUIRED] Username of a valid Twitter Account |
@@ -59,3 +64,12 @@ python followers.py pluckerpy password123 github 50 test
 | -b, --browser | Option to open Chrome window |
 | -t, --threshold | Threshold to write to output file |
 
+### Remove duplicates
+```
+python clean.py followers.json followers name
+```
+| Parameters   |      Description      |
+|----------|:-------------:|
+| input |  [REQUIRED] JSON file to remove duplicates |
+| column |  [REQUIRED] Column name to remove duplicates |
+| variable |  [REQUIRED] Unique variable of rows |

@@ -7,9 +7,11 @@ import termcolor as t
 parser = argparse.ArgumentParser(
     description='Remove duplicates and escape characters from JSON file', 
     formatter_class=argparse.RawTextHelpFormatter, 
-    epilog="Example of usage:\npython clean.py followers.json\n"
+    epilog="Example of usage:\npython clean.py followers.json followers name\n"
     )
 parser.add_argument("input", metavar="input", help="[REQUIRED] JSON file to clean")
+parser.add_argument("column", metavar="column", help="[REQUIRED] Column name to clean")
+parser.add_argument("variable", metavar="variable", help="[REQUIRED] Unique variable name to clean")
 args = parser.parse_args()
 inputjson = args.input
 if  inputjson.find(".json") == -1:
@@ -29,23 +31,17 @@ except FileNotFoundError:
 
 # Remove duplicates
 
-followers, names = {}, {}
+clean, variable = {}, {}
 count, removed = 0, 0
-for index in data["followers"].items(): 
-    if index[1]["name"] not in names.values():
-        followers[count] = index[1]
-        names[count] = index[1]["name"]
+for index in data[args.column].items(): 
+    if index[1][args.variable] not in variable.values():
+        clean[count] = index[1]
+        variable[count] = index[1][args.variable]
         count += 1
     else:
         removed += 1
 
-# Remove unicode escapes
-
-for index in followers.items():
-    index[1]["name"] = index[1]["name"].encode("utf-8").decode("utf-8")
-    index[1]["bio"] = index[1]["bio"].encode("utf-8").decode("utf-8")
-
-data["followers"] = followers
+data[args.column] = clean
 filejson.truncate(0)
 filejson.seek(0)
 json.dump(data, filejson, indent=4)

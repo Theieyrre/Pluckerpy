@@ -75,6 +75,25 @@ if driver.current_url.find("error") != -1:
     sys.exit(t.colored("Wrong Username/Password !", "red"))
 else:
     print(t.colored(" * Login successful ! * ", "green"), end="\r")
+
+if int(args.min) == -1:
+    url = "https://twitter.com/" + args.input
+    print("Getting total follower count  " + t.colored(url, "blue"))
+    driver.get(url)
+    print("Waiting DOM to get ready...", end = "\r")
+    wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
+    column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
+    followers = column.find_element_by_css_selector("a[href='/"+ args.input +"/followers']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
+    letter = followers[-1]
+    if letter == "K":
+        max = float(followers[:-1]) * 1000 + 100
+    elif letter == "M":
+        max = float(followers[:-1]) * 1000000 + 10000
+    else:
+        max = int(followers)
+else:
+    max = int(args.min)
+
 url = "https://twitter.com/" + args.input + "/followers"
 driver.get(url)
 print("Scraping url  " + t.colored(url, "blue"))
@@ -100,8 +119,9 @@ data["screen_name"] = screen_name
 count, threshold = 0, 0
 last_height = driver.execute_script("return document.body.scrollHeight")
 followers = {}
-while count <= int(args.min):
-    percent = Decimal((count / int(args.min)) * 100)
+print(max)
+while count <= max:
+    percent = Decimal((count / max) * 100)
     print("Gathering Followers " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
     user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
     try:
@@ -145,7 +165,7 @@ while count <= int(args.min):
                 print(t.colored("Saving data to CSV file ","yellow"), end="\r")
                 output.seek(0)
                 json.dump(data, output, indent=4)  
-            if count > int(args.min):
+            if count >= max:
                 break
     except StaleElementReferenceException:
         print(t.colored("Page Structure changed !", "red"))

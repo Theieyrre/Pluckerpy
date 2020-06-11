@@ -1,7 +1,6 @@
-import sys, time
-import argparse
+import sys, time, argparse, json, re
 from decimal import Decimal
-import json
+
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -17,8 +16,10 @@ import termcolor as t
 parser = argparse.ArgumentParser(
     description='Get profile and tweets of a Twitter user', 
     formatter_class=argparse.RawTextHelpFormatter, 
-    epilog="Example of usage:\npython profile.py github 1000\n"
+    epilog="Example of usage:\npython profile.py pluckerpy password123 github 1000\n"
     )
+parser.add_argument("username", metavar="username", help="[REQUIRED] Username of a valid Twitter Account")
+parser.add_argument("password", metavar="password", help="[REQUIRED] Password of a valid Twitter Account")
 parser.add_argument("input", metavar="input", help="[REQUIRED] @name of a profile page")
 parser.add_argument("min", metavar="min", nargs="?", help="Minimum tweet count, default 100", default=100)
 parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="profile.json")
@@ -56,6 +57,23 @@ print("Creating Chrome Web Driver..." + t.colored("Done", "green"))
 print("Starting Chrome Web Driver...", end = "\r")
 driver = webdriver.Chrome(executable_path=r'chromedriver.exe', options=options)
 print("Starting Chrome Web Driver..." + t.colored("Done", "green"))
+url = "https://twitter.com/login"
+print("Waiting page to open...", end = "\r")
+driver.get(url)
+wait = WebDriverWait(driver, 10)
+print("Waiting page to open..." + t.colored("Done", "green"))
+print("Entering credentials...", end="\r")
+wait.until(presence_of_element_located((By.CSS_SELECTOR, "input[name='session[username_or_email]']")))
+username_area = driver.find_element_by_css_selector("input[name='session[username_or_email]']")
+password_area = driver.find_element_by_css_selector("input[name='session[password]']")
+username_area.send_keys(args.username)
+password_area.send_keys(args.password)
+driver.find_element_by_css_selector("div[data-testid='LoginForm_Login_Button']").click()
+if driver.current_url.find("error") != -1:
+    driver.close()
+    sys.exit(t.colored("Wrong Username/Password !", "red"))
+else:
+    print(t.colored(" * Login successful ! * ", "green"), end="\r")
 url = "https://twitter.com/" + args.input + "/with_replies"
 print("Waiting page to open...", end = "\r")
 driver.get(url)
@@ -65,22 +83,31 @@ print("Scraping url  " + t.colored(url, "blue"))
 print("Waiting DOM to get ready...", end = "\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
 column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
-wait.until(presence_of_element_located((By.CSS_SELECTOR, "a[href='/" + args.input + "/header_photo'")))
+try:
+    wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[aria-label*='Timeline']")))
+    try_again = column.find_element_by_css_selector("div[aria-label*='Timeline']")
+except NoSuchElementException:
+    driver.close()
+    sys.exit(t.colored("No user with name "+args.input+" !", "red"))
+wait.until(presence_of_element_located((By.CSS_SELECTOR, "h2[aria-level='2']")))
 print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
 # Scrap profile data
 
-banner = column.find_element_by_css_selector("a[href='/" + args.input + "/header_photo'")
-profile = banner.find_element_by_xpath("..")
-name_div = profile.find_elements_by_css_selector("div[dir='auto']")[1]
-main_name = name_div.find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
+time.sleep(2)
+header = column.find_element_by_css_selector("h2[aria-level='2']")
+profile = header.find_element_by_xpath("..")
+name_div = header.find_elements_by_css_selector("div")[2]
+main_name = name_div.find_elements_by_css_selector("span")[2].get_attribute("innerHTML")
+total_tweets = profile.find_element_by_css_selector("div[dir='auto']").get_attribute("innerHTML").split(" ")[0]
 try:
-    bio = profile.find_element_by_css_selector("div[data-testid='UserDescription']").find_element_by_css_selector("span").get_attribute("innerHTML")
+    bio = column.find_element_by_css_selector("div[data-testid='UserDescription']").find_element_by_css_selector("span").get_attribute("innerHTML")
 except NoSuchElementException:
     bio = "-"
 data['screen_name'] = main_name
 data['name'] = args.input
 data['bio'] = bio
+data['total_tweets'] = total_tweets
 
 is_verified = False
 try:
@@ -90,7 +117,7 @@ except NoSuchElementException:
     pass
 data['is_verified'] = is_verified
 
-info_div = profile.find_element_by_css_selector("div[data-testid='UserProfileHeader_Items']")
+info_div = column.find_element_by_css_selector("div[data-testid='UserProfileHeader_Items']")
 try:
     link = info_div.find_element_by_css_selector("a").get_attribute("href")
 except NoSuchElementException:
@@ -107,10 +134,11 @@ data['location'] = location
 register = spans[-1].get_attribute("innerHTML").split("</svg>")[1].split("Joined ")[1]
 data['register'] = register
 
-following = profile.find_element_by_css_selector("a[href='/"+ args.input +"/following']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
+#wait.until(presence_of_element_located((By.CSS_SELECTOR, "a[href='/"+ args.input +"/following']")))
+following = column.find_element_by_css_selector("a[href='/"+ args.input +"/following']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
 data['following'] = following
 
-followers = profile.find_element_by_css_selector("a[href='/"+ args.input +"/followers']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
+followers = column.find_element_by_css_selector("a[href='/"+ args.input +"/followers']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
 data['followers'] = followers
 
 # Scrap Tweets
@@ -118,9 +146,21 @@ data['followers'] = followers
 count,  threshold = 0 , 0
 tweets = {}
 last_height = driver.execute_script("return document.body.scrollHeight")
-while count <= int(args.min):
-    percent = Decimal((count / int(args.min)) * 100)
+if int(args.min) == -1:
+    letter = total_tweets[-1]
+    if letter == "K":
+        max = float(total_tweets[:-1]) * 1000 + 100
+    elif letter == "M":
+        max = float(total_tweets[:-1]) * 1000000 + 10000
+    else:
+        max = int(total_tweets)
+else:
+    max = int(args.min)
+print(max)
+while count <= max:
+    percent = Decimal((count / max) * 100)
     print("Gathering Tweets  " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
+    wait.until(presence_of_element_located((By.CSS_SELECTOR, "article")))
     articles = column.find_elements_by_css_selector("article")
     if len(articles) == 0:
         print(t.colored("No tweets found !", "red"))
@@ -187,6 +227,7 @@ while count <= int(args.min):
             except NoSuchElementException:
                 tweet_content = "-"
                 lang = "-"
+                mentions = "-"
 
             media = "-"
             try:
