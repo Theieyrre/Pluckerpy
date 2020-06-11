@@ -81,7 +81,7 @@ print("Scraping url  " + t.colored(url, "blue"))
 print("Waiting DOM to get ready...", end = "\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
 column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
-wait.until(presence_of_element_located((By.CSS_SELECTOR, "section[role='region']")))
+wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[aria-label='Timeline: Followers']")))
 print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
 # Get Name
@@ -100,27 +100,47 @@ while count <= int(args.min):
     user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
     try:
         for user in user_cells:
+            main_div = user.find_elements_by_css_selector("div.r-5f2r5o")[1]
+            div_autos = main_div.find_elements_by_css_selector("div[dir='auto']")
+            bio = ""
+            if len(div_autos) == 4:
+                bio_div = main_div.find_elements_by_css_selector("div[dir='auto']")[-1]
+                for span in bio_div.find_elements_by_css_selector("span"):
+                    bio_text = span.get_attribute("innerHTML")
+                    if span.get_attribute("class") == "r-18u37iz":
+                        bio_text = span.find_element_by_css_selector("a").get_attribute("innerHTML")
+                    bio += bio_text   
+            else:
+                bio = "-"             
+            name = main_div.find_element_by_css_selector("a[href^='/']").get_attribute("href").split("/")[-1]
             screen_name = user.find_element_by_css_selector("div[dir='auto']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
-            is_verified = False
             try:
                 verified = user.find_element_by_css_selector("svg[aria-label='Verified account']")
                 is_verified = True
             except NoSuchElementException:
-                pass
-            name = user.find_element_by_css_selector("a[href^='/']").get_attribute("href").split("/")[-1]
+                is_verified = False
+            try:
+                locked = user.find_element_by_css_selector("svg[aria-label='Protected account']")
+                is_locked = True
+            except NoSuchElementException:
+                is_locked = False
             follower = {
                 'screen_name': screen_name,
                 'name': name,
-                'is_verified': is_verified
+                'is_verified': is_verified,
+                'is_locked': is_locked,
+                'bio': bio
             }
             followers[count] = follower
             data["followers"] = followers
             threshold += 1
             count += 1
             if threshold > int(args.threshold):
-                print(t.colored("Saving data to CSV file","yellow"), end="\r")
+                print(t.colored("Saving data to CSV file ","yellow"), end="\r")
                 output.seek(0)
                 json.dump(data, output, indent=4)  
+            if count > int(args.min):
+                break
     except StaleElementReferenceException:
         print(t.colored("Page Structure changed !", "red"))
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -132,4 +152,4 @@ while count <= int(args.min):
 output.seek(0)
 print("Completed! Total number of followers: " + str(count))
 json.dump(data, output, indent=4) 
-driver.close()
+# driver.close()
