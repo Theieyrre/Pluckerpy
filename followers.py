@@ -83,6 +83,7 @@ if int(args.min) == -1:
     print("Waiting DOM to get ready...", end = "\r")
     wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
     column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
+    wait.until(presence_of_element_located((By.CSS_SELECTOR, "a[href='/"+ args.input +"/followers']")))
     followers = column.find_element_by_css_selector("a[href='/"+ args.input +"/followers']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
     letter = followers[-1]
     if letter == "K":
@@ -119,7 +120,6 @@ data["screen_name"] = screen_name
 count, threshold = 0, 0
 last_height = driver.execute_script("return document.body.scrollHeight")
 followers = {}
-print(max)
 while count <= max:
     percent = Decimal((count / max) * 100)
     print("Gathering Followers " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
@@ -157,10 +157,11 @@ while count <= max:
                 'is_locked': is_locked,
                 'bio': bio
             }
-            followers[count] = follower
+            if follower not in followers.values():
+                followers[count] = follower
+                threshold += 1
+                count += 1
             data["followers"] = followers
-            threshold += 1
-            count += 1
             if threshold > int(args.threshold):
                 print(t.colored("Saving data to CSV file ","yellow"), end="\r")
                 output.seek(0)

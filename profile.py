@@ -145,6 +145,7 @@ data['followers'] = followers
 
 count,  threshold = 0 , 0
 tweets = {}
+variable = {}
 last_height = driver.execute_script("return document.body.scrollHeight")
 if int(args.min) == -1:
     letter = total_tweets[-1]
@@ -156,7 +157,6 @@ if int(args.min) == -1:
         max = int(total_tweets)
 else:
     max = int(args.min)
-print(max)
 while count <= max:
     percent = Decimal((count / max) * 100)
     print("Gathering Tweets  " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
@@ -168,7 +168,16 @@ while count <= max:
     try:
         for article in articles:
             tweet = article.find_element_by_css_selector("div[data-testid='tweet']")
-            html_a = tweet.find_element_by_css_selector("a[dir='auto']")
+            try:
+                html_a = tweet.find_element_by_css_selector("a[dir='auto']")
+            except NoSuchElementException:
+                threshold += 1
+                count += 1
+                if threshold > int(args.threshold):
+                    print(t.colored("Saving data to CSV file","yellow"), end="\r")
+                    output.seek(0)
+                    json.dump(data, output, indent=4) 
+                continue
             date = html_a.find_element_by_css_selector("time").get_attribute("datetime")
             name_id = html_a.get_attribute("href").split("/")
             name = name_id[-3]
@@ -289,11 +298,13 @@ while count <= max:
                 source_element = driver.find_element_by_css_selector("a[href$='/how-to-tweet#source-labels']")
                 source = source_element.find_element_by_css_selector("span").get_attribute("innerHTML")
                 tweet_dict['source'] = source
-                driver.back()
-            tweets[count] = tweet_dict
-            data["tweets"] = tweets
-            threshold += 1
-            count += 1
+                driver.back() 
+            if tweet_dict["id"] not in variable.values():
+                tweets[count] = tweet_dict
+                data["tweets"] = tweets
+                variable[count] = tweet_dict["id"]
+                count += 1
+                threshold += 1
             if threshold > int(args.threshold):
                 print(t.colored("Saving data to CSV file","yellow"), end="\r")
                 output.seek(0)
