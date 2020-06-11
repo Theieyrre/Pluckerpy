@@ -80,8 +80,14 @@ driver.get(url)
 print("Scraping url  " + t.colored(url, "blue"))
 print("Waiting DOM to get ready...", end = "\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
+time.sleep(2)
 column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
-wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[aria-label='Timeline: Followers']")))
+try:
+    try_again = column.find_element_by_css_selector("div[aria-label='Timeline: Followers']")
+except NoSuchElementException:
+    driver.close()
+    sys.exit(t.colored("No user with name "+args.input+" !", "red"))
+# wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[aria-label='Timeline: Followers']")))
 print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
 # Get Name
@@ -152,4 +158,4 @@ while count <= int(args.min):
 output.seek(0)
 print("Completed! Total number of followers: " + str(count))
 json.dump(data, output, indent=4) 
-# driver.close()
+driver.close()
