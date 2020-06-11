@@ -17,14 +17,14 @@ import termcolor as t
 parser = argparse.ArgumentParser(
     description='Get profile and tweets of a Twitter user', 
     formatter_class=argparse.RawTextHelpFormatter, 
-    epilog="Example of usage:\npython app.py tobb 1000 output.csv\n"
+    epilog="Example of usage:\npython profile.py github 1000\n"
     )
-parser.add_argument("input", metavar="input", help="[REQUIRED] Topic word, to seach in twitter, to search more than one word add quotes around string")
+parser.add_argument("input", metavar="input", help="[REQUIRED] @name of a profile page")
 parser.add_argument("min", metavar="min", nargs="?", help="Minimum tweet count, default 100", default=100)
 parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="profile.json")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
 parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
-parser.add_argument("-c", "--click", metavar="click", nargs="?", help="OPtion to click on tweets to get source label")
+parser.add_argument("-c", "--click", metavar="click", nargs="?", help="Option to click on tweets to get source label")
 args = parser.parse_args()
 
 output = args.output
@@ -186,6 +186,7 @@ while count <= int(args.min):
                     mentions = "-"
             except NoSuchElementException:
                 tweet_content = "-"
+                lang = "-"
 
             media = "-"
             try:

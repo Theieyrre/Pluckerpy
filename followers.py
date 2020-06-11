@@ -18,7 +18,7 @@ import termcolor as t
 parser = argparse.ArgumentParser(
     description='Get followers of a Twitter user', 
     formatter_class=argparse.RawTextHelpFormatter, 
-    epilog="Example of usage:\npython app.py tobb 1000 output.csv\n"
+    epilog="Example of usage:\npython followers.py pluckerpy password123 github 1000\n"
     )
 parser.add_argument("username", metavar="username", help="[REQUIRED] Username of a valid Twitter Account")
 parser.add_argument("password", metavar="password", help="[REQUIRED] Password of a valid Twitter Account")
