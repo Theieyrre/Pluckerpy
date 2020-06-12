@@ -73,3 +73,15 @@ python clean.py followers.json followers name
 | input |  [REQUIRED] JSON file to remove duplicates |
 | column |  [REQUIRED] Column name to remove duplicates |
 | variable |  [REQUIRED] Unique variable of rows |
+
+### Label Data
+```
+python data.py
+```
+
+Write and update are mutually exclusive, can't be used together
+| Parameters   |      Description      |
+|----------|:-------------:|
+| -w, --write |  [DEFAULT] Create JSON file and write it |
+| -u, --update |  Update existing labeled JSON file |
+| filename |  Output file name to write json, default name <account name>.json |

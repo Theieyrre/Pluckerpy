@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(
     epilog="Example of usage:\npython data.py -w\n"
     )
 group = parser.add_mutually_exclusive_group()
-group.add_argument("-w", "--write", action='store_true', help="Create JSON file and write it")
+group.add_argument("-w", "--write", action='store_true', help="Create JSON file and write it", default=True)
 group.add_argument("-u", "--update", action='store_true', help="Update existing labeled JSON file")
 parser.add_argument("filename", metavar="filename", nargs="?", help="Output file name to write json, default name <account name>.json", default="")
 args = parser.parse_args()
@@ -31,10 +31,7 @@ account = {}
 main_name, name = "", ""
 tr_index, amb_index = 0, 0
 tr_dict, amb_dict = {}, {}
-if args.write is True:
-    main_name = input("Enter account screen name: ")
-    name = input("Enter account name: ")
-elif args.update is True:
+if args.update is True:
     try:
         filejson = open(filename,"r")
     except FileNotFoundError:
@@ -46,6 +43,11 @@ elif args.update is True:
     amb_index = len(amb_dict)
     main_name = data["screen_name"]
     name = data["name"]
+else:
+    main_name = input("Enter account screen name: ")
+    name = input("Enter account name: ")
+if len(filename) == 0:
+    filename = "./labeled/" + name + ".json"
 
 account["screen_name"] = main_name
 account["name"] = name
