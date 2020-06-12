@@ -1,9 +1,9 @@
-yurtdisiturkler
-AFADBaskanlik
+yurtdisiturkler 25
+AFADBaskanlik   43
 Kizilay
 trtworld
-anadoluagency
+anadoluagency   49
 aa_arabic
 TC_Disisleri
 MevlutCavusoglu
-trpresidency
+trpresidency    31
