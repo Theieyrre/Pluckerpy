@@ -88,7 +88,7 @@ try:
     try_again = column.find_element_by_css_selector("div[aria-label*='Timeline']")
 except NoSuchElementException:
     driver.close()
-    sys.exit(t.colored("No user with name "+args.input+" !", "red"))
+    sys.exit(t.colored("No user or locked account with name "+args.input+" !", "red"))
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "h2[aria-level='2']")))
 print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
@@ -98,7 +98,11 @@ time.sleep(2)
 header = column.find_element_by_css_selector("h2[aria-level='2']")
 profile = header.find_element_by_xpath("..")
 name_div = header.find_elements_by_css_selector("div")[2]
-main_name = name_div.find_elements_by_css_selector("span")[2].get_attribute("innerHTML")
+main_name = "-"
+for span in name_div.find_elements_by_css_selector("span:not([dir])"):
+    inside = span.get_attribute("innerHTML")
+    if inside != " " and len(inside) != 0:
+        main_name = inside
 total_tweets = profile.find_element_by_css_selector("div[dir='auto']").get_attribute("innerHTML").split(" ")[0]
 try:
     bio = column.find_element_by_css_selector("div[data-testid='UserDescription']").find_element_by_css_selector("span").get_attribute("innerHTML")

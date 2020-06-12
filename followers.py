@@ -126,20 +126,38 @@ while count <= max:
     user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
     try:
         for user in user_cells:
-            main_div = user.find_elements_by_css_selector("div.r-5f2r5o")[1]
+            main_div = user.find_element_by_css_selector("div.r-16y2uox")
             div_autos = main_div.find_elements_by_css_selector("div[dir='auto']")
             bio = ""
+            links = ""
             if len(div_autos) == 4:
                 bio_div = main_div.find_elements_by_css_selector("div[dir='auto']")[-1]
-                for span in bio_div.find_elements_by_css_selector("span"):
+                for span in bio_div.find_elements_by_css_selector("span:not([dir])"):
                     bio_text = span.get_attribute("innerHTML")
                     if span.get_attribute("class") == "r-18u37iz":
                         bio_text = span.find_element_by_css_selector("a").get_attribute("innerHTML")
-                    bio += bio_text   
+                    bio += bio_text
+                try:
+                    for a in bio_div.find_elements_by_css_selector("a[href]"):
+                        links += a.get_attribute("innerHTML").split("</span>")[-1] + " "
+                    if len(links) == 0:
+                        links = "-"   
+                except NoSuchElementException:
+                    links = "-"
             else:
-                bio = "-"             
+                bio = "-"
+                links= "-"             
             name = main_div.find_element_by_css_selector("a[href^='/']").get_attribute("href").split("/")[-1]
-            screen_name = user.find_element_by_css_selector("div[dir='auto']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
+            screen_name = "-"
+            emojis = ""
+            for div_auto in user.find_elements_by_css_selector("div[dir='auto']"):
+                for div in div_auto.find_elements_by_css_selector("div[aria-label]"):
+                    emojis += div.get_attribute("aria-label") + ", "
+            if len(emojis) == 0:
+                emojis = "-"
+            for span in user.find_element_by_css_selector("div[dir='auto']").find_elements_by_css_selector("span:not([dir])"):
+                if span.get_attribute("innerHTML") != " ":
+                    screen_name = span.get_attribute("innerHTML")
             try:
                 verified = user.find_element_by_css_selector("svg[aria-label='Verified account']")
                 is_verified = True
@@ -155,7 +173,9 @@ while count <= max:
                 'name': name,
                 'is_verified': is_verified,
                 'is_locked': is_locked,
-                'bio': bio
+                'bio': bio,
+                'links': links,
+                'emojis': emojis
             }
             if follower not in followers.values():
                 followers[count] = follower
