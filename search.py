@@ -39,9 +39,9 @@ if  output.find(".csv") == -1:
 # Create DataFrame
 
 df = pd.DataFrame(columns = [
-    "id", "name", "is_verified", "date", "tweet", "likes", 
+    "id", "name", "is_verified", "date", "tweet", "tweet_emojis", "likes", 
     "replies", "retweets", "tweet_link", "lang", "media",
-    "quote_name", "quote", "mentions", "links"
+    "quote_name", "quote", "quote_emojis", "mentions", "links"
     ])
 
 # Web Driver Options
@@ -125,10 +125,16 @@ while count <= int(args.min):
                 content = tweet.find_element_by_css_selector("div[lang]")
                 spans = content.find_elements_by_css_selector("span")
                 tweet_content = ""
+                tweet_emojis = ""
                 for span in spans:
                     if span.get_attribute("aria-hidden") == "true":
                         continue
-                    tweet_content += span.text
+                    if span.get_attribute("dir") == "auto":
+                        emoji_div = span.find_element_by_css_selector("div")
+                        tweet_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
+                    tweet_content += span.text    
+                if len(tweet_emojis) == 0:
+                    tweet_emojis = "-"  
                 lang = content.get_attribute("lang")
                 mentions = ""
                 try:
@@ -155,6 +161,7 @@ while count <= int(args.min):
 
             quote_name = "-"
             quote = ""
+            quote_emojis = ""
             try:
                 block_content = article.find_element_by_css_selector("div[role='blockquote']")
                 div = block_content.find_element_by_css_selector("div[dir='ltr']")
@@ -164,9 +171,15 @@ while count <= int(args.min):
                 for span in spans:
                     if span.get_attribute("aria-hidden") == "true":
                         continue
-                    quote += span.text           
+                    if span.get_attribute("dir") == "auto":
+                        emoji_div = span.find_element_by_css_selector("div")
+                        quote_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
+                    quote += span.text    
+                if len(quote_emojis) == 0:
+                    quote_emojis = "-"       
             except NoSuchElementException:
                 quote = "-"
+                quote_emojis = "-"
 
             link = ""
             try:
@@ -185,6 +198,7 @@ while count <= int(args.min):
                 "is_verified": is_verified,
                 "date": date,
                 "tweet": tweet_content,
+                "tweet_emojis": tweet_emojis,
                 "retweets": retweets,
                 "likes": likes,
                 "replies": replies,
@@ -193,10 +207,11 @@ while count <= int(args.min):
                 "media": media,
                 "quote_name": quote_name,
                 "quote": quote,
+                "quote_emojis": quote_emojis,
                 "mentions": mentions,
                 "links": link
             }
-            if args.click is not None:
+            if args.click is True:
                 driver.execute_script("window.open('{}');".format(tweet_link))
                 window_after = driver.window_handles[1]
                 window_before = driver.window_handles[0]
