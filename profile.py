@@ -99,18 +99,38 @@ header = column.find_element_by_css_selector("h2[aria-level='2']")
 profile = header.find_element_by_xpath("..")
 name_div = header.find_elements_by_css_selector("div")[2]
 main_name = "-"
-for span in name_div.find_elements_by_css_selector("span:not([dir])"):
-    inside = span.get_attribute("innerHTML")
-    if inside != " " and len(inside) != 0:
-        main_name = inside
+name_emojis = ""
+for span in name_div.find_elements_by_css_selector("span"):
+    if span.get_attribute("dir") == "auto":
+        emoji_div = span.find_element_by_css_selector("div")
+        name_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
+    else:
+        inside = span.get_attribute("innerHTML")
+        if inside != " " and len(inside) != 0:
+            main_name = inside
+if len(name_emojis) == 0:
+    name_emojis = "-"
 total_tweets = profile.find_element_by_css_selector("div[dir='auto']").get_attribute("innerHTML").split(" ")[0]
 try:
-    bio = column.find_element_by_css_selector("div[data-testid='UserDescription']").find_element_by_css_selector("span").get_attribute("innerHTML")
+    bio_div = column.find_element_by_css_selector("div[data-testid='UserDescription']")
+    bio = ""
+    bio_emojis = ""
+    for span in bio_div.find_elements_by_css_selector("span"):
+        if span.get_attribute("dir") == "auto":
+            emoji_div = span.find_element_by_css_selector("div")
+            bio_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
+        else:
+            bio += span.get_attribute("innerHTML")
+    if len(bio_emojis) == 0:
+        bio_emojis = "-"
 except NoSuchElementException:
     bio = "-"
+    bio_emojis = "-"
 data['screen_name'] = main_name
+data['name_emojis'] = name_emojis
 data['name'] = args.input
 data['bio'] = bio
+data['bio_emojis'] = bio_emojis
 data['total_tweets'] = total_tweets
 
 is_verified = False
@@ -128,7 +148,7 @@ except NoSuchElementException:
     link = "-"
 data['link'] = link
 
-spans = info_div.find_elements_by_css_selector("span")
+spans = info_div.find_elements_by_css_selector("span:not([dir])")
 try:
     location = spans[2].get_attribute("innerHTML")
 except IndexError:
@@ -222,10 +242,16 @@ while count <= max:
                 content = tweet.find_element_by_css_selector("div[lang]")
                 spans = content.find_elements_by_css_selector("span")
                 tweet_content = ""
+                tweet_emojis = ""
                 for span in spans:
                     if span.get_attribute("aria-hidden") == "true":
                         continue
+                    if span.get_attribute("dir") == "auto":
+                        emoji_div = span.find_element_by_css_selector("div")
+                        tweet_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
                     tweet_content += span.text
+                if len(tweet_emojis) == 0:
+                    tweet_emojis = "-"
                 lang = content.get_attribute("lang")
                 mentions = ""
                 try:
@@ -239,6 +265,7 @@ while count <= max:
                     mentions = "-"
             except NoSuchElementException:
                 tweet_content = "-"
+                tweet_emojis = "-"
                 lang = "-"
                 mentions = "-"
 
@@ -285,6 +312,7 @@ while count <= max:
                 'is_retweet': is_retweet,
                 'retweet_name': retweet_name,
                 'tweet': tweet_content,
+                'tweet_emojis': tweet_emojis,
                 'retweets': retweets,
                 'likes': likes,
                 'replies': replies,
@@ -296,7 +324,7 @@ while count <= max:
                 'mentions': mentions,
                 'links': link
             }
-            if args.click is not None:
+            if args.click is True:
                 driver.execute_script("window.open('{}');".format(tweet_link))
                 window_after = driver.window_handles[1]
                 window_before = driver.window_handles[0]
