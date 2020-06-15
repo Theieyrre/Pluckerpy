@@ -1,9 +1,29 @@
-yurtdisiturkler 25
-AFADBaskanlik   43
-Kizilay
-trtworld
-anadoluagency   49
-aa_arabic
-TC_Disisleri
-MevlutCavusoglu
-trpresidency    31
+> Ministries
+    @MofaQatar_AR
+    @MofaQatar_EN
+    @MOPHQatar
+    @MOI_Qatar
+    @AwqafM
+    @HukoomiQatar
+    @MOI_QatarEn
+    @MOCIQatar
+    @MOTC_QA
+
+> Newspapers/Media
+    @alraya_n
+    @al_watanQatar
+    @QatarTelevision
+    @dohanews
+    @covid19qatar
+    @QNAEnglish
+    
+> Public/Social/Institutes
+    @QatarUniversity
+    @qatarliving
+    @OoredooQatar
+    @kataraqatar
+    @QatarPrayer
+    @aspirezone
+    @QF
+    @qcharity
+    @HBKU

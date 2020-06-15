@@ -27,6 +27,8 @@ parser.add_argument("min", metavar="min", nargs="?", help="Minimum follower coun
 parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="followers.json")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
 parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
+parser.add_argument("-c", "--click", action='store_true', help="Option to open follower on new tab to get location")
+parser.add_argument("-w", "--waitlong", action='store_true', help="Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection")
 args = parser.parse_args()
 
 output = args.output
@@ -61,7 +63,10 @@ print("Starting Chrome Web Driver..." + t.colored("Done", "green"))
 url = "https://twitter.com/login"
 print("Waiting page to open...", end = "\r")
 driver.get(url)
-wait = WebDriverWait(driver, 10)
+if args.waitlong is True:
+    wait = WebDriverWait(driver, 25)
+else:
+    wait = WebDriverWait(driver, 10)
 print("Waiting page to open..." + t.colored("Done", "green"))
 print("Entering credentials...", end="\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "input[name='session[username_or_email]']")))
@@ -187,6 +192,22 @@ while count <= max:
                 'bio_emojis': bio_emojis,
                 'links': links
             }
+            if args.click is True:
+                profile_url = "https://twitter.com/" + name
+                driver.execute_script("window.open('{}');".format(profile_url))
+                window_after = driver.window_handles[1]
+                window_before = driver.window_handles[0]
+                driver.switch_to.window(window_after)
+                wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='UserProfileHeader_Items']")))
+                info_div = driver.find_element_by_css_selector("div[data-testid='UserProfileHeader_Items']")
+                spans = info_div.find_elements_by_css_selector("span:not([dir])")
+                try:
+                    location = spans[2].get_attribute("innerHTML")
+                except IndexError:
+                    location = "-"
+                follower["location"] = location
+                driver.execute_script("window.close();") 
+                driver.switch_to.window(window_before)
             if follower not in followers.values():
                 followers[count] = follower
                 threshold += 1
@@ -196,6 +217,7 @@ while count <= max:
                 print(t.colored("Saving data to CSV file ","yellow"), end="\r")
                 output.seek(0)
                 json.dump(data, output, indent=4)  
+                threshold = 0
             if count >= max:
                 break
     except StaleElementReferenceException:

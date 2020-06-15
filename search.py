@@ -25,7 +25,8 @@ parser.add_argument("min", metavar="min", nargs="?", help="Minimum tweet count, 
 parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="search.csv")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
 parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
-parser.add_argument("-c", "--click", action='store_true', help="Option to click on tweets to get source label")
+parser.add_argument("-c", "--click", action='store_true', help="Option to open tweet on new tab to get location")
+parser.add_argument("-w", "--waitlong", action='store_true', help="Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection")
 args = parser.parse_args()
 
 output = args.output
@@ -63,7 +64,10 @@ print("Starting Chrome Web Driver..." + t.colored("Done", "green"))
 url = "https://twitter.com/search?q=" + args.input + "&src=typed_query"
 print("Waiting page to open...", end = "\r")
 driver.get(url)
-wait = WebDriverWait(driver, 10)
+if args.waitlong is True:
+    wait = WebDriverWait(driver, 25)
+else:
+    wait = WebDriverWait(driver, 10)
 print("Waiting page to open..." + t.colored("Done", "green"))
 print("Scraping url  " + t.colored(url, "blue"))
 print("Waiting DOM to get ready...", end = "\r")
@@ -216,7 +220,6 @@ while count <= int(args.min):
                 window_after = driver.window_handles[1]
                 window_before = driver.window_handles[0]
                 driver.switch_to.window(window_after)
-                driver.get("https://twitter.com" + tweet_link)
                 wait.until(presence_of_element_located((By.CSS_SELECTOR, "a[href$='/how-to-tweet#source-labels']")))
                 source_element = driver.find_element_by_css_selector("a[href$='/how-to-tweet#source-labels']")
                 source = source_element.find_element_by_css_selector("span").get_attribute("innerHTML")

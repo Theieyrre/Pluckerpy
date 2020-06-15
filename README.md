@@ -32,6 +32,8 @@ python search.py github 50 test
 | output | Output file name to write csv |
 | -b, --browser | Option to open Chrome window |
 | -t, --threshold | Threshold to write to output file |
+| -c, --click | Option to open tweet on new tab to get location |
+|-w, --waitlong | Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection |
 
 ### Profile Scraping
 ```
@@ -46,6 +48,8 @@ To get all tweets of a user, set min to -1
 | output | Output file name to write json |
 | -b, --browser | Option to open Chrome window |
 | -t, --threshold | Threshold to write to output file |
+| -c, --click | Option to open tweet on new tab to get location |
+|-w, --waitlong | Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection |
 
 ### Followers Scraping
 ```
@@ -63,11 +67,14 @@ To get all followers of a user, set min to -1
 | output | Output file name to write json |
 | -b, --browser | Option to open Chrome window |
 | -t, --threshold | Threshold to write to output file |
+| -c, --click | Option to open follower on new tab to get location |
+|-w, --waitlong | Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection |
 
 ### Remove duplicates
 ```
 python clean.py followers.json followers name
 ```
+clean.py will return UnicodeDecodeErro if another application is used to change unicode escape characters
 | Parameters   |      Description      |
 |----------|:-------------:|
 | input |  [REQUIRED] JSON file to remove duplicates |
