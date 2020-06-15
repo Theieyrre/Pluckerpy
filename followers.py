@@ -9,6 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 
 import termcolor as t
@@ -222,6 +223,12 @@ while count <= max:
                 break
     except StaleElementReferenceException:
         print(t.colored("Page Structure changed !", "red"))
+    except TimeoutException:
+        print(t.colored("Twitter rate limit reached !", "red"))
+        if follower not in followers.values():
+            followers[count] = follower
+        output.seek(0)
+        json.dump(data, output, indent=4)
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(2)
     new_height = driver.execute_script("return document.body.scrollHeight")
