@@ -74,12 +74,15 @@ To get all followers of a user, set min to -1
 ```
 python clean.py followers.json followers name
 ```
-clean.py will return UnicodeDecodeErro if another application is used to change unicode escape characters
+clean.py will return UnicodeDecodeErro if another application is used to change unicode escape characters  
+variable and spaces are mutually exclusive, can't be used together
+
 | Parameters   |      Description      |
 |----------|:-------------:|
 | input |  [REQUIRED] JSON file to remove duplicates |
 | column |  [REQUIRED] Column name to remove duplicates |
-| variable |  [REQUIRED] Unique variable of rows |
+| -v, --variable |  Unique variable of rows |
+| -s, --spaces |  Option to remove space characters from content |
 
 ### Label Data
 ```
