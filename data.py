@@ -21,10 +21,10 @@ if  filename.find(".json") == -1 and len(filename) != 0:
             directory += w + "/"
         filename = filename.split("/")[-1]
         filename = directory + filename.split(".")[0] + ".json"
-        print(t.colored("Non csv file given as output format. Changing to " + filename, "yellow"))
+        print(t.colored("Non json file given as output format. Changing to " + filename, "yellow"))
     else:
         filename = filename.split(".")[0] + ".json"
-        print(t.colored("Non csv file given as output format. Changing to " + filename, "yellow"))
+        print(t.colored("Non json file given as output format. Changing to " + filename, "yellow"))
 
 account = {}
 

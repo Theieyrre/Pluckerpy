@@ -49,6 +49,7 @@ To get all tweets of a user, set min to -1
 | -b, --browser | Option to open Chrome window |
 | -t, --threshold | Threshold to write to output file |
 | -c, --click | Option to open tweet on new tab to get location |
+| -s, --seperator | Seperator for csv file |
 |-w, --waitlong | Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection |
 
 ### Followers Scraping
