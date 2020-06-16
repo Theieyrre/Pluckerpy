@@ -129,8 +129,8 @@ followers = {}
 while count <= max:
     percent = Decimal((count / max) * 100)
     print("Gathering Followers " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
-    user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
     try:
+        user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
         for user in user_cells:
             main_div = user.find_element_by_css_selector("div.r-16y2uox")
             div_autos = main_div.find_elements_by_css_selector("div[dir='auto']")

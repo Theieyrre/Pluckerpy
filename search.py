@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 
 import pandas as pd
@@ -27,6 +28,7 @@ parser.add_argument("-b", "--browser", action='store_true', help="Option to open
 parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
 parser.add_argument("-c", "--click", action='store_true', help="Option to open tweet on new tab to get location")
 parser.add_argument("-w", "--waitlong", action='store_true', help="Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection")
+parser.add_argument("-s", "--seperator", action='store_true', help="Seperator for csv file")
 args = parser.parse_args()
 
 output = args.output
@@ -232,9 +234,20 @@ while count <= int(args.min):
             if threshold > int(args.threshold):
                 print(t.colored("Saving data to CSV file","yellow"), end="\r")
                 df = df.drop_duplicates()
-                df.to_csv(output, index=False, na_rep="-")  
+                if args.seperator is True:
+                    df.to_csv(output, index=False, na_rep="-", sep=args.seperator)
+                else:
+                    df.to_csv(output, index=False, na_rep="-") 
+                threshold = 0 
     except StaleElementReferenceException:
         print(t.colored("Page Structure changed !", "red"))
+    except TimeoutException:
+        print(t.colored("Twitter rate limit reached !", "red"))
+        df = df.drop_duplicates()
+        if args.seperator is True:
+            df.to_csv(output, index=False, na_rep="-", sep=args.seperator)
+        else:
+            df.to_csv(output, index=False, na_rep="-") 
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(2)
     new_height = driver.execute_script("return document.body.scrollHeight")
@@ -244,7 +257,10 @@ while count <= int(args.min):
 df = df.drop_duplicates()
 print("Completed! Total number of tweets: " + str(len(df.index)))
 driver.close()
-df.to_csv(output, index=False, na_rep="-")
+if args.seperator is True:
+    df.to_csv(output, index=False, na_rep="-", sep=args.seperator)
+else:
+    df.to_csv(output, index=False, na_rep="-")
 
 
 
