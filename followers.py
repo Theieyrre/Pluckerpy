@@ -145,7 +145,10 @@ while count <= max:
                             continue
                         if span.get_attribute("dir") == "auto":
                             emoji_div = span.find_element_by_css_selector("div")
-                            bio_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
+                            try:
+                                bio_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
+                            except NoSuchElementException:
+                                pass
                         else:
                             bio_text = span.get_attribute("innerHTML")
                             bio += bio_text

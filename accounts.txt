@@ -1,9 +1,9 @@
 > Ministries
-    @MofaQatar_AR 4000
-    @MofaQatar_EN 3003
-    @MOPHQatar 
-    @MOI_Qatar 5379
-    @AwqafM
+    @MofaQatar_AR Done
+    @MofaQatar_EN Done
+    @MOPHQatar Done
+    @MOI_Qatar Done
+    @AwqafM Done
     @HukoomiQatar
     @MOI_QatarEn
     @MOCIQatar
