@@ -109,11 +109,11 @@ wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='prima
 time.sleep(2)
 column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
 try:
+    time.sleep(2)
     try_again = column.find_element_by_css_selector("div[aria-label='Timeline: Followers']")
 except NoSuchElementException:
     driver.close()
     sys.exit(t.colored("No user with name "+args.input+" !", "red"))
-# wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[aria-label='Timeline: Followers']")))
 print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
 # Get Name
@@ -132,97 +132,100 @@ while count <= max:
     try:
         user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
         for user in user_cells:
-            main_div = user.find_element_by_css_selector("div.r-16y2uox")
-            div_autos = main_div.find_elements_by_css_selector("div[dir='auto']")
-            bio = ""
-            bio_emojis = ""
-            links = ""
-            if len(div_autos) == 4:
-                bio_div = main_div.find_elements_by_css_selector("div[dir='auto']")[-1]
-                for span in bio_div.find_elements_by_css_selector("span"):
-                    if span.get_attribute("class") == "r-18u37iz":
-                        continue
-                    if span.get_attribute("dir") == "auto":
-                        emoji_div = span.find_element_by_css_selector("div")
-                        bio_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
-                    else:
-                        bio_text = span.get_attribute("innerHTML")
-                        bio += bio_text
-                if len(bio_emojis) == 0:
+            try:
+                main_div = user.find_element_by_css_selector("div.r-16y2uox")
+                div_autos = main_div.find_elements_by_css_selector("div[dir='auto']")
+                bio = ""
+                bio_emojis = ""
+                links = ""
+                if len(div_autos) == 4:
+                    bio_div = main_div.find_elements_by_css_selector("div[dir='auto']")[-1]
+                    for span in bio_div.find_elements_by_css_selector("span"):
+                        if span.get_attribute("class") == "r-18u37iz":
+                            continue
+                        if span.get_attribute("dir") == "auto":
+                            emoji_div = span.find_element_by_css_selector("div")
+                            bio_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
+                        else:
+                            bio_text = span.get_attribute("innerHTML")
+                            bio += bio_text
+                    if len(bio_emojis) == 0:
+                        bio_emojis = "-"
+                    try:
+                        for a in bio_div.find_elements_by_css_selector("a[href]"):
+                            links += a.get_attribute("innerHTML").split("</span>")[-1] + " "
+                        if len(links) == 0:
+                            links = "-"   
+                    except NoSuchElementException:
+                        links = "-"
+                else:
+                    bio = "-"
                     bio_emojis = "-"
+                    links= "-"             
+                name_div = main_div.find_element_by_css_selector("a[href^='/']")
+                name = name_div.get_attribute("href").split("/")[-1]
+                screen_name = ""
+                name_emojis = ""
+                for div_auto in name_div.find_elements_by_css_selector("div[dir='auto']"):
+                    for div in div_auto.find_elements_by_css_selector("div[aria-label]"):
+                        name_emojis += div.find_element_by_css_selector("img").get_attribute("src") + ","
+                if len(name_emojis) == 0:
+                    name_emojis = "-"
+                for span in user.find_element_by_css_selector("div[dir='auto']").find_element_by_css_selector("span:not([dir])").find_elements_by_css_selector("span:not([dir])"):
+                    if span.get_attribute("innerHTML") != " ":
+                        screen_name += span.get_attribute("innerHTML")
                 try:
-                    for a in bio_div.find_elements_by_css_selector("a[href]"):
-                        links += a.get_attribute("innerHTML").split("</span>")[-1] + " "
-                    if len(links) == 0:
-                        links = "-"   
+                    verified = user.find_element_by_css_selector("svg[aria-label='Verified account']")
+                    is_verified = True
                 except NoSuchElementException:
-                    links = "-"
-            else:
-                bio = "-"
-                bio_emojis = "-"
-                links= "-"             
-            name_div = main_div.find_element_by_css_selector("a[href^='/']")
-            name = name_div.get_attribute("href").split("/")[-1]
-            screen_name = ""
-            name_emojis = ""
-            for div_auto in name_div.find_elements_by_css_selector("div[dir='auto']"):
-                for div in div_auto.find_elements_by_css_selector("div[aria-label]"):
-                    name_emojis += div.find_element_by_css_selector("img").get_attribute("src") + ","
-            if len(name_emojis) == 0:
-                name_emojis = "-"
-            for span in user.find_element_by_css_selector("div[dir='auto']").find_element_by_css_selector("span:not([dir])").find_elements_by_css_selector("span:not([dir])"):
-                if span.get_attribute("innerHTML") != " ":
-                    screen_name += span.get_attribute("innerHTML")
-            try:
-                verified = user.find_element_by_css_selector("svg[aria-label='Verified account']")
-                is_verified = True
-            except NoSuchElementException:
-                is_verified = False
-            try:
-                locked = user.find_element_by_css_selector("svg[aria-label='Protected account']")
-                is_locked = True
-            except NoSuchElementException:
-                is_locked = False
-            follower = {
-                'screen_name': screen_name,
-                'name': name,
-                'name_emojis': name_emojis,
-                'is_verified': is_verified,
-                'is_locked': is_locked,
-                'bio': bio,
-                'bio_emojis': bio_emojis,
-                'links': links
-            }
-            if args.click is True:
-                profile_url = "https://twitter.com/" + name
-                driver.execute_script("window.open('{}');".format(profile_url))
-                window_after = driver.window_handles[1]
-                window_before = driver.window_handles[0]
-                driver.switch_to.window(window_after)
-                wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='UserProfileHeader_Items']")))
-                info_div = driver.find_element_by_css_selector("div[data-testid='UserProfileHeader_Items']")
-                spans = info_div.find_elements_by_css_selector("span:not([dir])")
+                    is_verified = False
                 try:
-                    location = spans[2].get_attribute("innerHTML")
-                except IndexError:
-                    location = "-"
-                follower["location"] = location
-                driver.execute_script("window.close();") 
-                driver.switch_to.window(window_before)
-            if follower not in followers.values():
-                followers[count] = follower
-                threshold += 1
-                count += 1
-            data["followers"] = followers
-            if threshold > int(args.threshold):
-                print(t.colored("Saving data to CSV file ","yellow"), end="\r")
-                output.seek(0)
-                json.dump(data, output, indent=4)  
-                threshold = 0
-            if count >= max:
-                break
-    except StaleElementReferenceException:
-        print(t.colored("Page Structure changed !", "red"))
+                    locked = user.find_element_by_css_selector("svg[aria-label='Protected account']")
+                    is_locked = True
+                except NoSuchElementException:
+                    is_locked = False
+                follower = {
+                    'screen_name': screen_name,
+                    'name': name,
+                    'name_emojis': name_emojis,
+                    'is_verified': is_verified,
+                    'is_locked': is_locked,
+                    'bio': bio,
+                    'bio_emojis': bio_emojis,
+                    'links': links
+                }
+                if args.click is True:
+                    profile_url = "https://twitter.com/" + name
+                    driver.execute_script("window.open('{}');".format(profile_url))
+                    window_after = driver.window_handles[1]
+                    window_before = driver.window_handles[0]
+                    driver.switch_to.window(window_after)
+                    wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='UserProfileHeader_Items']")))
+                    info_div = driver.find_element_by_css_selector("div[data-testid='UserProfileHeader_Items']")
+                    spans = info_div.find_elements_by_css_selector("span:not([dir])")
+                    try:
+                        location = spans[2].get_attribute("innerHTML")
+                    except IndexError:
+                        location = "-"
+                    follower["location"] = location
+                    driver.execute_script("window.close();") 
+                    driver.switch_to.window(window_before)
+                if follower not in followers.values():
+                    followers[count] = follower
+                    threshold += 1
+                    count += 1
+                data["followers"] = followers
+                if threshold > int(args.threshold):
+                    print(t.colored("Saving data to CSV file ","yellow"), end="\r")
+                    output.seek(0)
+                    json.dump(data, output, indent=4)  
+                    threshold = 0
+                if count >= max:
+                    break
+            except StaleElementReferenceException:
+                print(t.colored("Page Structure changed !", "grey"), end='\r')
+                user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
+                continue
     except TimeoutException:
         print(t.colored("Twitter rate limit reached !", "red"))
         if follower not in followers.values():
@@ -232,8 +235,6 @@ while count <= max:
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(2)
     new_height = driver.execute_script("return document.body.scrollHeight")
-    if new_height == last_height:
-        break
     last_height = new_height
 output.seek(0)
 print("Completed! Total number of followers: " + str(count))

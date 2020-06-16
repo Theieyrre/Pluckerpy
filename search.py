@@ -93,154 +93,157 @@ while count <= int(args.min):
         break
     try:
         for article in articles:
-            tweet = article.find_element_by_css_selector("div[data-testid='tweet']")
-            html_a = tweet.find_element_by_css_selector("a[dir='auto']")
-            date = html_a.find_element_by_css_selector("time").get_attribute("datetime")
-            name_id = html_a.get_attribute("href").split("/")
-            name = name_id[-3]
-            tweet_id = name_id[-1]
-            is_verified = False
             try:
-                verified = tweet.find_element_by_css_selector("svg[aria-label='Verified account']")
-                is_verified = True
-            except NoSuchElementException:
-                pass
-            replies = 0
-            retweets = 0
-            likes = 0
-            try:
-                replies_list = tweet.find_element_by_css_selector("div[data-testid='reply']").get_attribute("aria-label").split(" ")
-                if len(replies_list) != 1:
-                    replies = replies_list[0]
-            except NoSuchElementException:
-                pass
-            try:
-                retweets_list = tweet.find_element_by_css_selector("div[data-testid='retweet']").get_attribute("aria-label").split(" ")
-                if len(retweets_list) != 1:
-                    retweets = retweets_list[0]
-            except NoSuchElementException:
-                pass
-            try:
-                likes_list = tweet.find_element_by_css_selector("div[data-testid='like']").get_attribute("aria-label").split(" ")
-                if len(likes_list) != 1:
-                    likes = likes_list[0]
-            except NoSuchElementException:
-                pass
-
-            try:
-                content = tweet.find_element_by_css_selector("div[lang]")
-                spans = content.find_elements_by_css_selector("span")
-                tweet_content = ""
-                tweet_emojis = ""
-                for span in spans:
-                    if span.get_attribute("aria-hidden") == "true":
-                        continue
-                    if span.get_attribute("dir") == "auto":
-                        emoji_div = span.find_element_by_css_selector("div")
-                        tweet_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
-                    tweet_content += span.text    
-                if len(tweet_emojis) == 0:
-                    tweet_emojis = "-"  
-                lang = content.get_attribute("lang")
-                mentions = ""
+                tweet = article.find_element_by_css_selector("div[data-testid='tweet']")
+                html_a = tweet.find_element_by_css_selector("a[dir='auto']")
+                date = html_a.find_element_by_css_selector("time").get_attribute("datetime")
+                name_id = html_a.get_attribute("href").split("/")
+                name = name_id[-3]
+                tweet_id = name_id[-1]
+                is_verified = False
                 try:
-                    mentions_list = content.find_elements_by_css_selector("a[href^='/']")
-                    mentions = ""
-                    for mention in mentions_list:
-                        mentions += mention.text
+                    verified = tweet.find_element_by_css_selector("svg[aria-label='Verified account']")
+                    is_verified = True
                 except NoSuchElementException:
                     pass
-                if len(mentions) == 0:
-                    mentions = "-"
-            except NoSuchElementException:
-                tweet_content = "-"
+                replies = 0
+                retweets = 0
+                likes = 0
+                try:
+                    replies_list = tweet.find_element_by_css_selector("div[data-testid='reply']").get_attribute("aria-label").split(" ")
+                    if len(replies_list) != 1:
+                        replies = replies_list[0]
+                except NoSuchElementException:
+                    pass
+                try:
+                    retweets_list = tweet.find_element_by_css_selector("div[data-testid='retweet']").get_attribute("aria-label").split(" ")
+                    if len(retweets_list) != 1:
+                        retweets = retweets_list[0]
+                except NoSuchElementException:
+                    pass
+                try:
+                    likes_list = tweet.find_element_by_css_selector("div[data-testid='like']").get_attribute("aria-label").split(" ")
+                    if len(likes_list) != 1:
+                        likes = likes_list[0]
+                except NoSuchElementException:
+                    pass
 
-            media = "-"
-            try:
-                media = tweet.find_element_by_css_selector("video").get_attribute("src")
-            except NoSuchElementException:
-                pass
-            try:
-                media = tweet.find_element_by_css_selector("img[alt='Image']").get_attribute("src")
-            except NoSuchElementException:
-                pass
+                try:
+                    content = tweet.find_element_by_css_selector("div[lang]")
+                    spans = content.find_elements_by_css_selector("span")
+                    tweet_content = ""
+                    tweet_emojis = ""
+                    for span in spans:
+                        if span.get_attribute("aria-hidden") == "true":
+                            continue
+                        if span.get_attribute("dir") == "auto":
+                            emoji_div = span.find_element_by_css_selector("div")
+                            tweet_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
+                        tweet_content += span.text    
+                    if len(tweet_emojis) == 0:
+                        tweet_emojis = "-"  
+                    lang = content.get_attribute("lang")
+                    mentions = ""
+                    try:
+                        mentions_list = content.find_elements_by_css_selector("a[href^='/']")
+                        mentions = ""
+                        for mention in mentions_list:
+                            mentions += mention.text
+                    except NoSuchElementException:
+                        pass
+                    if len(mentions) == 0:
+                        mentions = "-"
+                except NoSuchElementException:
+                    tweet_content = "-"
 
-            quote_name = "-"
-            quote = ""
-            quote_emojis = ""
-            try:
-                block_content = article.find_element_by_css_selector("div[role='blockquote']")
-                div = block_content.find_element_by_css_selector("div[dir='ltr']")
-                quote_name = div.find_element_by_css_selector("span").text.split("@")[1]
-                quote_content = block_content.find_element_by_css_selector("div[lang]")
-                spans = quote_content.find_elements_by_css_selector("span")
-                for span in spans:
-                    if span.get_attribute("aria-hidden") == "true":
-                        continue
-                    if span.get_attribute("dir") == "auto":
-                        emoji_div = span.find_element_by_css_selector("div")
-                        quote_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
-                    quote += span.text    
-                if len(quote_emojis) == 0:
-                    quote_emojis = "-"       
-            except NoSuchElementException:
-                quote = "-"
-                quote_emojis = "-"
+                media = "-"
+                try:
+                    media = tweet.find_element_by_css_selector("video").get_attribute("src")
+                except NoSuchElementException:
+                    pass
+                try:
+                    media = tweet.find_element_by_css_selector("img[alt='Image']").get_attribute("src")
+                except NoSuchElementException:
+                    pass
 
-            link = ""
-            try:
-                urls = tweet.find_elements_by_css_selector("a[href^='http']")
-                for url in urls:
-                    link += url.get_attribute("href") + " "
-            except NoSuchElementException:
-                pass
-            if len(link) == 0:
-                link = "-"
+                quote_name = "-"
+                quote = ""
+                quote_emojis = ""
+                try:
+                    block_content = article.find_element_by_css_selector("div[role='blockquote']")
+                    div = block_content.find_element_by_css_selector("div[dir='ltr']")
+                    quote_name = div.find_element_by_css_selector("span").text.split("@")[1]
+                    quote_content = block_content.find_element_by_css_selector("div[lang]")
+                    spans = quote_content.find_elements_by_css_selector("span")
+                    for span in spans:
+                        if span.get_attribute("aria-hidden") == "true":
+                            continue
+                        if span.get_attribute("dir") == "auto":
+                            emoji_div = span.find_element_by_css_selector("div")
+                            quote_emojis += emoji_div.find_element_by_css_selector("img").get_attribute("src") + ","
+                        quote += span.text    
+                    if len(quote_emojis) == 0:
+                        quote_emojis = "-"       
+                except NoSuchElementException:
+                    quote = "-"
+                    quote_emojis = "-"
 
-            tweet_link = "/" + name + "/status/" + tweet_id
-            tweet_dict = {
-                "id": tweet_id,
-                "name": name,
-                "is_verified": is_verified,
-                "date": date,
-                "tweet": tweet_content,
-                "tweet_emojis": tweet_emojis,
-                "retweets": retweets,
-                "likes": likes,
-                "replies": replies,
-                "tweet_link": tweet_link,
-                "lang": lang,
-                "media": media,
-                "quote_name": quote_name,
-                "quote": quote,
-                "quote_emojis": quote_emojis,
-                "mentions": mentions,
-                "links": link
-            }
-            if args.click is True:
-                driver.execute_script("window.open('{}');".format(tweet_link))
-                window_after = driver.window_handles[1]
-                window_before = driver.window_handles[0]
-                driver.switch_to.window(window_after)
-                wait.until(presence_of_element_located((By.CSS_SELECTOR, "a[href$='/how-to-tweet#source-labels']")))
-                source_element = driver.find_element_by_css_selector("a[href$='/how-to-tweet#source-labels']")
-                source = source_element.find_element_by_css_selector("span").get_attribute("innerHTML")
-                tweet_dict["source"] = source
-                driver.execute_script("window.close();") 
-                driver.switch_to.window(window_before)
-            df = df.append(tweet_dict, ignore_index = True)
-            threshold += 1
-            count += 1
-            if threshold > int(args.threshold):
-                print(t.colored("Saving data to CSV file","yellow"), end="\r")
-                df = df.drop_duplicates()
-                if args.seperator is True:
-                    df.to_csv(output, index=False, na_rep="-", sep=args.seperator)
-                else:
-                    df.to_csv(output, index=False, na_rep="-") 
-                threshold = 0 
-    except StaleElementReferenceException:
-        print(t.colored("Page Structure changed !", "red"))
+                link = ""
+                try:
+                    urls = tweet.find_elements_by_css_selector("a[href^='http']")
+                    for url in urls:
+                        link += url.get_attribute("href") + " "
+                except NoSuchElementException:
+                    pass
+                if len(link) == 0:
+                    link = "-"
+
+                tweet_link = "/" + name + "/status/" + tweet_id
+                tweet_dict = {
+                    "id": tweet_id,
+                    "name": name,
+                    "is_verified": is_verified,
+                    "date": date,
+                    "tweet": tweet_content,
+                    "tweet_emojis": tweet_emojis,
+                    "retweets": retweets,
+                    "likes": likes,
+                    "replies": replies,
+                    "tweet_link": tweet_link,
+                    "lang": lang,
+                    "media": media,
+                    "quote_name": quote_name,
+                    "quote": quote,
+                    "quote_emojis": quote_emojis,
+                    "mentions": mentions,
+                    "links": link
+                }
+                if args.click is True:
+                    driver.execute_script("window.open('{}');".format(tweet_link))
+                    window_after = driver.window_handles[1]
+                    window_before = driver.window_handles[0]
+                    driver.switch_to.window(window_after)
+                    wait.until(presence_of_element_located((By.CSS_SELECTOR, "a[href$='/how-to-tweet#source-labels']")))
+                    source_element = driver.find_element_by_css_selector("a[href$='/how-to-tweet#source-labels']")
+                    source = source_element.find_element_by_css_selector("span").get_attribute("innerHTML")
+                    tweet_dict["source"] = source
+                    driver.execute_script("window.close();") 
+                    driver.switch_to.window(window_before)
+                df = df.append(tweet_dict, ignore_index = True)
+                threshold += 1
+                count += 1
+                if threshold > int(args.threshold):
+                    print(t.colored("Saving data to CSV file","yellow"), end="\r")
+                    df = df.drop_duplicates()
+                    if args.seperator is True:
+                        df.to_csv(output, index=False, na_rep="-", sep=args.seperator)
+                    else:
+                        df.to_csv(output, index=False, na_rep="-") 
+                    threshold = 0 
+            except StaleElementReferenceException:
+                print(t.colored("Page Structure changed !", "red"))
+                articles = column.find_elements_by_css_selector("article")
+                continue
     except TimeoutException:
         print(t.colored("Twitter rate limit reached !", "red"))
         df = df.drop_duplicates()
