@@ -65,10 +65,7 @@ print("Starting Chrome Web Driver..." + t.colored("Done", "green"))
 url = "https://twitter.com/login"
 print("Waiting page to open...", end = "\r")
 driver.get(url)
-if args.waitlong is True:
-    wait = WebDriverWait(driver, 25)
-else:
-    wait = WebDriverWait(driver, 10)
+wait = WebDriverWait(driver, 25) if args.waitlong is True else WebDriverWait(driver, 10)
 print("Waiting page to open..." + t.colored("Done", "green"))
 print("Entering credentials...", end="\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "input[name='session[username_or_email]']")))
@@ -89,8 +86,6 @@ if int(args.min) == -1:
     url = "https://twitter.com/" + args.input
     print("Getting total follower count  " + t.colored(url, "blue"))
     driver.get(url)
-    if driver.current_url.find("rate-limited") != -1:
-        driver.close()
     sys.exit(t.colored("Twitter rate limited ! Re-run this script couple seconds later", "red"))
     print("Waiting DOM to get ready...", end = "\r")
     wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
@@ -147,13 +142,18 @@ else:
 
 url = "https://twitter.com/" + args.input + "/followers"
 driver.get(url)
+sleep = 2.5 if args.waitlong is True else 1
+time.sleep(sleep)
 print("Scraping url  " + t.colored(url, "blue"))
+if driver.current_url.find("rate-limited") != -1:
+    driver.close()
+    sys.exit(t.colored("Twitter rate limit reached !", "red"))
 print("Waiting DOM to get ready...", end = "\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
-time.sleep(2)
+time.sleep(sleep)
 column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
 try:
-    time.sleep(2)
+    time.sleep(sleep)
     try_again = column.find_element_by_css_selector("div[aria-label='Timeline: Followers']")
 except NoSuchElementException:
     driver.close()
@@ -259,20 +259,21 @@ while count <= max:
                     spans = info_div.find_elements_by_css_selector("span:not([dir])")
                     try:
                         location = spans[2].get_attribute("innerHTML")
+                        follower["location"] = location
+                        driver.execute_script("window.close();") 
+                        driver.switch_to.window(window_before)
                     except IndexError:
                         total_count += 1
                         names.append(follower["name"])
                         driver.execute_script("window.close();") 
                         driver.switch_to.window(window_before)
                         continue
-                    follower["location"] = location
-                    driver.execute_script("window.close();") 
-                    driver.switch_to.window(window_before)
                 if follower not in followers.values():
                     names.append(follower["name"])
                     followers[index] = follower
                     threshold += 1
                     count += 1
+                    index += 1
                 data["followers"] = followers
                 if threshold > int(args.threshold):
                     print(t.colored("Saving data to json file ","yellow"), end="\r")
@@ -296,7 +297,7 @@ while count <= max:
     if is_break:
         break
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(2)
+    time.sleep(sleep)
     new_height = driver.execute_script("return document.body.scrollHeight")
     last_height = new_height
 output.seek(0)

@@ -33,7 +33,7 @@ python search.py github 50 test
 | -b, --browser | Option to open Chrome window |
 | -t, --threshold | Threshold to write to output file |
 | -c, --click | Option to open tweet on new tab to get location |
-|-w, --waitlong | Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection |
+|-w, --waitlong | Option to wait more than 10 seconds on loading elements.<br>Will reduce runtime significantly ! Use only have slow connection |
 
 ### Profile Scraping
 ```
@@ -50,7 +50,7 @@ To get all tweets of a user, set min to -1
 | -t, --threshold | Threshold to write to output file |
 | -c, --click | Option to open tweet on new tab to get location |
 | -s, --seperator | Seperator for csv file |
-|-w, --waitlong | Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection |
+|-w, --waitlong | Option to wait more than 10 seconds on loading elements.<br>Will reduce runtime significantly ! Use only have slow connection |
 
 ### Followers Scraping
 ```
@@ -69,7 +69,7 @@ To get all followers of a user, set min to -1
 | -b, --browser | Option to open Chrome window |
 | -t, --threshold | Threshold to write to output file |
 | -c, --click | Option to open follower on new tab to get location |
-|-w, --waitlong | Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection |
+|-w, --waitlong | Option to wait more than 10 seconds on loading elements.<br>Will reduce runtime significantly ! Use only have slow connection |
 |-l, --load | Option to load json file with names to continue after reaching rate limit |
 
 ### Remove duplicates
@@ -97,3 +97,14 @@ Write and update are mutually exclusive, can't be used together
 | -w, --write |  [DEFAULT] Create JSON file and write it |
 | -u, --update |  Update existing labeled JSON file |
 | filename |  Output file name to write json, default name <account name>.json |
+
+### Concatenate JSON Files
+```
+python concat.py first.json second.json third.json
+```
+
+If file name has whitespace, type it inside quote marks
+| Parameters   |      Description      |
+|----------|:-------------:|
+| jsons |  Names of json files seperated with space |
+| -o, --output |  Output file name to concat all, default output.json |
