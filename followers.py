@@ -86,7 +86,9 @@ if int(args.min) == -1:
     url = "https://twitter.com/" + args.input
     print("Getting total follower count  " + t.colored(url, "blue"))
     driver.get(url)
-    sys.exit(t.colored("Twitter rate limited ! Re-run this script couple seconds later", "red"))
+    if driver.current_url.find("rate-limited") != -1:
+        driver.close()
+        sys.exit(t.colored("Twitter rate limited ! Re-run this script couple seconds later", "red"))
     print("Waiting DOM to get ready...", end = "\r")
     wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
     column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")

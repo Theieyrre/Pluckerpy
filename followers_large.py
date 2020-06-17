@@ -31,7 +31,6 @@ parser.add_argument("-b", "--browser", action='store_true', help="Option to open
 parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
 parser.add_argument("-c", "--click", action='store_true', help="Option to open follower on new tab to get location")
 parser.add_argument("-w", "--waitlong", action='store_true', help="Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection")
-parser.add_argument("-l", "--load", metavar="threshold", nargs="?", help="Option to load json file with names to continue after reaching rate limit")
 args = parser.parse_args()
 
 output = args.output
@@ -53,36 +52,36 @@ if args.browser is not True:
 options.add_argument("--lang=en")
 options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
-# Start Chrome WebDriver
-
-print("Starting Chrome Web Driver...", end = "\r")
-driver = webdriver.Chrome(executable_path=r'chromedriver.exe', options=options)
-print("Starting Chrome Web Driver..." + t.colored("Done", "green"))
-url = "https://twitter.com/login"
-print("Waiting page to open...", end = "\r")
-driver.get(url)
-wait = WebDriverWait(driver, 25) if args.waitlong is True else WebDriverWait(driver, 10)
-print("Waiting page to open..." + t.colored("Done", "green"))
-print("Entering credentials...", end="\r")
-wait.until(presence_of_element_located((By.CSS_SELECTOR, "input[name='session[username_or_email]']")))
-username_area = driver.find_element_by_css_selector("input[name='session[username_or_email]']")
-password_area = driver.find_element_by_css_selector("input[name='session[password]']")
-username_area.send_keys(args.username)
-password_area.send_keys(args.password)
-driver.find_element_by_css_selector("div[data-testid='LoginForm_Login_Button']").click()
-if driver.current_url.find("error") != -1:
-    driver.close()
-    sys.exit(t.colored("Wrong Username/Password !", "red"))
-else:
-    print(t.colored(" * Login successful ! * ", "green"), end="\r")
-
 # Check option -1 for all content
 
 if int(args.min) == -1:
+    # Start Chrome WebDriver
+    print("Starting Chrome Web Driver...", end = "\r")
+    driver = webdriver.Chrome(executable_path=r'chromedriver.exe', options=options)
+    print("Starting Chrome Web Driver..." + t.colored("Done", "green"))
+    url = "https://twitter.com/login"
+    print("Waiting page to open...", end = "\r")
+    driver.get(url)
+    wait = WebDriverWait(driver, 25) if args.waitlong is True else WebDriverWait(driver, 10)
+    print("Waiting page to open..." + t.colored("Done", "green"))
+    print("Entering credentials...", end="\r")
+    wait.until(presence_of_element_located((By.CSS_SELECTOR, "input[name='session[username_or_email]']")))
+    username_area = driver.find_element_by_css_selector("input[name='session[username_or_email]']")
+    password_area = driver.find_element_by_css_selector("input[name='session[password]']")
+    username_area.send_keys(args.username)
+    password_area.send_keys(args.password)
+    driver.find_element_by_css_selector("div[data-testid='LoginForm_Login_Button']").click()
+    if driver.current_url.find("error") != -1:
+        driver.close()
+        sys.exit(t.colored("Wrong Username/Password !", "red"))
+    else:
+        print(t.colored(" * Login successful ! * ", "green"), end="\r")
     url = "https://twitter.com/" + args.input
     print("Getting total follower count  " + t.colored(url, "blue"))
     driver.get(url)
-    sys.exit(t.colored("Twitter rate limited ! Re-run this script couple seconds later", "red"))
+    if driver.current_url.find("rate-limited") != -1:
+        driver.close()
+        sys.exit(t.colored("Twitter rate limited ! Re-run this script couple seconds later", "red"))
     print("Waiting DOM to get ready...", end = "\r")
     wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
     column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
@@ -95,42 +94,9 @@ if int(args.min) == -1:
         max = float(followers_count[:-1]) * 1000000 + 10000
     else:
         max = int(followers_count)
+    driver.close()
 else:
     max = int(args.min)
-
-names = []
-if args.load is not None:  
-    print("Loading json file...", end = "\r")  
-    filename = args.load
-    if  filename.find(".json") == -1 and len(filename) != 0:
-        if filename.find("/") != -1:
-            directory_list = filename.split("/")[:-1]
-            directory = ""
-            for w in directory_list:
-                directory += w + "/"
-            filename = filename.split("/")[-1]
-            filename = directory + filename.split(".")[0] + ".json"
-            print(t.colored("Non json file given as load format. Looking for " + filename, "yellow"))
-        else:
-            filename = filename.split(".")[0] + ".json"
-            print(t.colored("Non json file given as load format. Looking for " + filename, "yellow"))
-    try:
-        if filename == output:
-            output = open(filename,"r+")
-            datajson = json.load(output)
-            followers = datajson["followers"] 
-        else:
-            filejson = open(filename, "r")
-            datajson = json.load(filejson)
-            followers = datajson["followers"]
-            output = open(output, "w")
-        names = [ follower["name"] for follower in followers.values()]
-        print("Loading json file..." + t.colored("Done", "green"))
-    except FileNotFoundError:
-        print(t.colored("File not found to load !", "red"))
-        output = open(output, "w")
-else:
-    output = open(output, "w")
 
 sleep = 2.5 if args.waitlong is True else 1
 
@@ -159,16 +125,17 @@ class Twitter:
             sys.exit(t.colored("Wrong Username/Password !", "red"))
         else:
             print(t.colored(" * Login successful ! * ", "green"), end="\r")
-        return driver
+        return driver, wait
     def get_followers(self, amount):
-        driver = create_browser()
+        count, total_count, threshold, index = 0, 0, 0, len(self.followers)
+        driver, wait = self.create_browser()
         url = "https://twitter.com/" + args.input + "/followers"
         driver.get(url)
         time.sleep(sleep)
         print("Scraping url  " + t.colored(url, "blue"))
         if driver.current_url.find("rate-limited") != -1:
             driver.close()
-            sys.exit(t.colored("Twitter rate limit reached !", "red"))
+            sys.exit(t.colored("Twitter rate limit reached ! Couldn't open page", "red")) 
         print("Waiting DOM to get ready...", end = "\r")
         wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
         time.sleep(sleep)
@@ -180,12 +147,11 @@ class Twitter:
             driver.close()
             sys.exit(t.colored("No user with name "+args.input+" !", "red"))
         print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
-        count, total_count, threshold, index = 0, 0, 0, len(followers)
         is_break = False
         last_height = driver.execute_script("return document.body.scrollHeight")
         while count <= amount:
-            percent = Decimal((count / max) * 100)
-            print("Gathering Followers " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
+            percent = Decimal((count / amount) * 100)
+            print("Gathering Followers " + t.colored(str(round(percent,2)) + "%","magenta"), end="\r")
             try:
                 user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
                 for user in user_cells:
@@ -305,18 +271,25 @@ class Twitter:
             time.sleep(sleep)
             new_height = driver.execute_script("return document.body.scrollHeight")
             last_height = new_height
-        output.seek(0)
-        if args.load is None:
-            print("Completed! Number of followers with location: " + str(count))
-            print("Total number of followers: " + str(total_count))
-            print("Percentage of location: " + str(round(Decimal((count / total_count) * 100),2)))
-        else:
-            print("Completed! Total number of followers: " + str(count))
         return count, total_count, data, False
 
 # Create Twitter Object
 
 twitter = Twitter([], {})
-c, t, _, is_rate_limited = twitter.get_followers(max)
-while not is_rate_limited or max - c > 0:
-    c, t, _, is_rate_limited = twitter.get_followers(max - c)
+count_, total_count_ = 0, 0
+is_rate_limited = False
+while max - count_ > 0:
+    count_prev, total_count_prev, _, is_rate_limited = twitter.get_followers(max - count_)
+    count_ += count_prev
+    total_count_ += total_count_prev
+    print("Number of followers with location: " + str(count_))
+    print("Total number of followers: " + str(total_count_))
+    # Wait for rate limit to pass
+    print("Waiting 45 seconds before nex iteration...",end="\r")
+    time.sleep(45)
+    print("Waiting 45 seconds before nex iteration..." + t.colored("Done","green"))
+output.seek(0)
+json.dump(_, output, indent=4)
+print("Completed! Number of followers with location: " + str(count_))
+print("Total number of followers: " + str(total_count_))
+print("Percentage of location: " + str(round(Decimal((count_ / total_count_) * 100),2)))
