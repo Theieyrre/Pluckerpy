@@ -300,7 +300,7 @@ while count <= max:
     new_height = driver.execute_script("return document.body.scrollHeight")
     last_height = new_height
 output.seek(0)
-if args.click is True:
+if args.click is True and args.load is None:
     print("Completed! Number of followers with location: " + str(count))
     print("Total number of followers: " + str(total_count))
     print("Percentage of location: " + str(round(Decimal((count / total_count) * 100),2)))
