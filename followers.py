@@ -1,6 +1,7 @@
 import sys, time
 import argparse
 from decimal import Decimal
+from os import path
 import json
 
 from selenium import webdriver
@@ -25,11 +26,12 @@ parser.add_argument("username", metavar="username", help="[REQUIRED] Username of
 parser.add_argument("password", metavar="password", help="[REQUIRED] Password of a valid Twitter Account")
 parser.add_argument("input", metavar="input", help="[REQUIRED] Topic word, to seach in twitter, to search more than one word add quotes around string")
 parser.add_argument("min", metavar="min", nargs="?", help="Minimum follower count, default 100", default=100)
-parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name output.csv", default="followers.json")
+parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name followers.json", default="followers.json")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
 parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
 parser.add_argument("-c", "--click", action='store_true', help="Option to open follower on new tab to get location")
 parser.add_argument("-w", "--waitlong", action='store_true', help="Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection")
+parser.add_argument("-l", "--load", metavar="threshold", nargs="?", help="Option to load json file with names to continue after reaching rate limit")
 args = parser.parse_args()
 
 output = args.output
@@ -39,7 +41,6 @@ if  output.find(".json") == -1:
         print(t.colored("Non json file given as output format. Changing to " + output, "yellow"))
     else:
         output = output + ".json"
-output = open(output, "w")
 
 # Create Dictionary
 
@@ -82,24 +83,67 @@ if driver.current_url.find("error") != -1:
 else:
     print(t.colored(" * Login successful ! * ", "green"), end="\r")
 
+# Check option -1 for all content
+
 if int(args.min) == -1:
     url = "https://twitter.com/" + args.input
     print("Getting total follower count  " + t.colored(url, "blue"))
     driver.get(url)
+    if driver.current_url.find("rate-limited") != -1:
+        driver.close()
+    sys.exit(t.colored("Twitter rate limited ! Re-run this script couple seconds later", "red"))
     print("Waiting DOM to get ready...", end = "\r")
     wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
     column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
     wait.until(presence_of_element_located((By.CSS_SELECTOR, "a[href='/"+ args.input +"/followers']")))
-    followers = column.find_element_by_css_selector("a[href='/"+ args.input +"/followers']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
-    letter = followers[-1]
+    followers_count = column.find_element_by_css_selector("a[href='/"+ args.input +"/followers']").find_element_by_css_selector("span").find_element_by_css_selector("span").get_attribute("innerHTML")
+    letter = followers_count[-1]
     if letter == "K":
-        max = float(followers[:-1]) * 1000 + 100
+        max = float(followers_count[:-1]) * 1000 + 100
     elif letter == "M":
-        max = float(followers[:-1]) * 1000000 + 10000
+        max = float(followers_count[:-1]) * 1000000 + 10000
     else:
-        max = int(followers)
+        max = int(followers_count)
 else:
     max = int(args.min)
+
+# Check if load or not:
+
+names = []
+if args.load is not None:  
+    print("Loading json file...", end = "\r")  
+    filename = args.load
+    if  filename.find(".json") == -1 and len(filename) != 0:
+        if filename.find("/") != -1:
+            directory_list = filename.split("/")[:-1]
+            directory = ""
+            for w in directory_list:
+                directory += w + "/"
+            filename = filename.split("/")[-1]
+            filename = directory + filename.split(".")[0] + ".json"
+            print(t.colored("Non json file given as load format. Looking for " + filename, "yellow"))
+        else:
+            filename = filename.split(".")[0] + ".json"
+            print(t.colored("Non json file given as load format. Looking for " + filename, "yellow"))
+    try:
+        if filename == output:
+            output = open(filename,"r+")
+            datajson = json.load(output)
+            followers = datajson["followers"] 
+        else:
+            filejson = open(filename, "r")
+            datajson = json.load(filejson)
+            followers = datajson["followers"]
+            output = open(output, "w")
+        names = [ follower["name"] for follower in followers.values()]
+        print("Loading json file..." + t.colored("Done", "green"))
+    except FileNotFoundError:
+        print(t.colored("File not found to load !", "red"))
+        output = open(output, "w")
+else:
+    output = open(output, "w")
+
+# Login 
 
 url = "https://twitter.com/" + args.input + "/followers"
 driver.get(url)
@@ -123,9 +167,14 @@ data["screen_name"] = screen_name
 
 # Scrap Followers
 
-count, threshold = 0, 0
+count, total_count, threshold, index = 0, 0, 0, 0
+is_break = False
 last_height = driver.execute_script("return document.body.scrollHeight")
-followers = {}
+if args.load is not None:
+    followers = datajson["followers"]
+    index = len(followers)
+else:
+    followers = {}
 while count <= max:
     percent = Decimal((count / max) * 100)
     print("Gathering Followers " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
@@ -197,6 +246,8 @@ while count <= max:
                     'bio_emojis': bio_emojis,
                     'links': links
                 }
+                if follower["name"] in names:
+                    continue
                 if args.click is True:
                     profile_url = "https://twitter.com/" + name
                     driver.execute_script("window.open('{}');".format(profile_url))
@@ -209,17 +260,22 @@ while count <= max:
                     try:
                         location = spans[2].get_attribute("innerHTML")
                     except IndexError:
-                        location = "-"
+                        total_count += 1
+                        names.append(follower["name"])
+                        driver.execute_script("window.close();") 
+                        driver.switch_to.window(window_before)
+                        continue
                     follower["location"] = location
                     driver.execute_script("window.close();") 
                     driver.switch_to.window(window_before)
                 if follower not in followers.values():
-                    followers[count] = follower
+                    names.append(follower["name"])
+                    followers[index] = follower
                     threshold += 1
                     count += 1
                 data["followers"] = followers
                 if threshold > int(args.threshold):
-                    print(t.colored("Saving data to CSV file ","yellow"), end="\r")
+                    print(t.colored("Saving data to json file ","yellow"), end="\r")
                     output.seek(0)
                     json.dump(data, output, indent=4)  
                     threshold = 0
@@ -230,16 +286,25 @@ while count <= max:
                 user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
                 continue
     except TimeoutException:
+        is_break = True
         print(t.colored("Twitter rate limit reached !", "red"))
         if follower not in followers.values():
-            followers[count] = follower
+            followers[index] = follower
         output.seek(0)
         json.dump(data, output, indent=4)
+        break
+    if is_break:
+        break
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(2)
     new_height = driver.execute_script("return document.body.scrollHeight")
     last_height = new_height
 output.seek(0)
-print("Completed! Total number of followers: " + str(count))
+if args.click is True:
+    print("Completed! Number of followers with location: " + str(count))
+    print("Total number of followers: " + str(total_count))
+    print("Percentage of location: " + str(round(Decimal((count / total_count) * 100),2)))
+else:
+    print("Completed! Total number of followers: " + str(count))
 json.dump(data, output, indent=4) 
 driver.close()

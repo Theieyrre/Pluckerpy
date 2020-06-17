@@ -1,4 +1,6 @@
 .vscode
 *.csv
+accounts/*.json
+labeled/
 *.json
-accounts.txt
+!accounts.json

@@ -70,6 +70,7 @@ To get all followers of a user, set min to -1
 | -t, --threshold | Threshold to write to output file |
 | -c, --click | Option to open follower on new tab to get location |
 |-w, --waitlong | Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection |
+|-l, --load | Option to load json file with names to continue after reaching rate limit |
 
 ### Remove duplicates
 ```
