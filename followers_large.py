@@ -40,7 +40,7 @@ if  output.find(".json") == -1:
         print(t.colored("Non json file given as output format. Changing to " + output, "yellow"))
     else:
         output = output + ".json"
-
+output = open(output, "w")
 data = {'name': args.input}
 
 # Web Driver Options
@@ -237,7 +237,7 @@ class Twitter:
                             driver.switch_to.window(window_before)
                         except IndexError:
                             total_count += 1
-                            names.append(follower["name"])
+                            self.names.append(follower["name"])
                             driver.execute_script("window.close();") 
                             driver.switch_to.window(window_before)
                             continue
@@ -253,7 +253,7 @@ class Twitter:
                             output.seek(0)
                             json.dump(data, output, indent=4)  
                             threshold = 0
-                        if count >= max:
+                        if count >= amount:
                             break
                     except StaleElementReferenceException:
                         print(t.colored("Page Structure changed !", "grey"), end='\r')
@@ -261,6 +261,7 @@ class Twitter:
                         continue
             except TimeoutException:
                 is_break = True
+                driver.close()
                 print(t.colored("Twitter rate limit reached !", "red"))
                 if follower not in self.followers.values():
                     self.followers[index] = follower
@@ -285,9 +286,9 @@ while max - count_ > 0:
     print("Number of followers with location: " + str(count_))
     print("Total number of followers: " + str(total_count_))
     # Wait for rate limit to pass
-    print("Waiting 45 seconds before nex iteration...",end="\r")
-    time.sleep(45)
-    print("Waiting 45 seconds before nex iteration..." + t.colored("Done","green"))
+    print("Waiting 50 seconds before next iteration...",end="\r")
+    time.sleep(50)
+    print("Waiting 50 seconds before next iteration..." + t.colored("Done","green"))
 output.seek(0)
 json.dump(_, output, indent=4)
 print("Completed! Number of followers with location: " + str(count_))

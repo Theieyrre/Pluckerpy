@@ -43,6 +43,8 @@ To get all tweets of a user, set min to -1
 
 | Parameters   |      Description      |
 |----------|:-------------:|
+| username |  [REQUIRED] Username of a valid Twitter Account |
+| password |  [REQUIRED] Password of a valid Twitter Account |
 | input |  [REQUIRED] Name of profile without @ |
 | min |    Minimum tweet count  |
 | output | Output file name to write json |
