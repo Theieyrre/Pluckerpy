@@ -72,7 +72,7 @@ if int(args.min) == -1:
     password_area.send_keys(args.password)
     driver.find_element_by_css_selector("div[data-testid='LoginForm_Login_Button']").click()
     if driver.current_url.find("error") != -1:
-        driver.close()
+        driver.quit()
         sys.exit(t.colored("Wrong Username/Password !", "red"))
     else:
         print(t.colored(" * Login successful ! * ", "green"), end="\r")
@@ -80,7 +80,7 @@ if int(args.min) == -1:
     print("Getting total follower count  " + t.colored(url, "blue"))
     driver.get(url)
     if driver.current_url.find("rate-limited") != -1:
-        driver.close()
+        driver.quit()
         sys.exit(t.colored("Twitter rate limited ! Re-run this script couple seconds later", "red"))
     print("Waiting DOM to get ready...", end = "\r")
     wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
@@ -94,7 +94,7 @@ if int(args.min) == -1:
         max = float(followers_count[:-1]) * 1000000 + 10000
     else:
         max = int(followers_count)
-    driver.close()
+    driver.quit()
 else:
     max = int(args.min)
 
@@ -121,7 +121,7 @@ class Twitter:
         password_area.send_keys(args.password)
         driver.find_element_by_css_selector("div[data-testid='LoginForm_Login_Button']").click()
         if driver.current_url.find("error") != -1:
-            driver.close()
+            driver.quit()
             sys.exit(t.colored("Wrong Username/Password !", "red"))
         else:
             print(t.colored(" * Login successful ! * ", "green"), end="\r")
@@ -134,7 +134,7 @@ class Twitter:
         time.sleep(sleep)
         print("Scraping url  " + t.colored(url, "blue"))
         if driver.current_url.find("rate-limited") != -1:
-            driver.close()
+            driver.quit()
             sys.exit(t.colored("Twitter rate limit reached ! Couldn't open page", "red")) 
         print("Waiting DOM to get ready...", end = "\r")
         wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
@@ -144,7 +144,7 @@ class Twitter:
             time.sleep(sleep)
             try_again = column.find_element_by_css_selector("div[aria-label='Timeline: Followers']")
         except NoSuchElementException:
-            driver.close()
+            driver.quit()
             sys.exit(t.colored("No user with name "+args.input+" !", "red"))
         print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
         is_break = False
@@ -233,12 +233,12 @@ class Twitter:
                         try:
                             location = spans[2].get_attribute("innerHTML")
                             follower["location"] = location
-                            driver.execute_script("window.close();") 
+                            driver.close()
                             driver.switch_to.window(window_before)
                         except IndexError:
                             total_count += 1
                             self.names.append(follower["name"])
-                            driver.execute_script("window.close();") 
+                            driver.close()
                             driver.switch_to.window(window_before)
                             continue
                         if follower not in self.followers.values():
@@ -256,39 +256,37 @@ class Twitter:
                         if count >= amount:
                             break
                     except StaleElementReferenceException:
-                        print(t.colored("Page Structure changed !", "grey"), end='\r')
+                        time.sleep(sleep * 2)
                         user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
                         continue
             except TimeoutException:
-                is_break = True
-                driver.close()
+                driver.quit()
                 print(t.colored("Twitter rate limit reached !", "red"))
                 if follower not in self.followers.values():
                     self.followers[index] = follower
                 output.seek(0)
                 json.dump(data, output, indent=4)
-                return count, total_count, data, True 
+                return count, total_count, data 
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(sleep)
             new_height = driver.execute_script("return document.body.scrollHeight")
             last_height = new_height
-        return count, total_count, data, False
+        return count, total_count, data
 
 # Create Twitter Object
 
 twitter = Twitter([], {})
 count_, total_count_ = 0, 0
-is_rate_limited = False
 while max - count_ > 0:
-    count_prev, total_count_prev, _, is_rate_limited = twitter.get_followers(max - count_)
+    count_prev, total_count_prev, _ = twitter.get_followers(max - count_)
     count_ += count_prev
     total_count_ += total_count_prev
     print("Number of followers with location: " + str(count_))
     print("Total number of followers: " + str(total_count_))
     # Wait for rate limit to pass
-    print("Waiting 50 seconds before next iteration...",end="\r")
-    time.sleep(50)
-    print("Waiting 50 seconds before next iteration..." + t.colored("Done","green"))
+    print("Waiting 240 seconds before next iteration...",end="\r")
+    time.sleep(240)
+    print("Waiting 240 seconds before next iteration..." + t.colored("Done","green"))
 output.seek(0)
 json.dump(_, output, indent=4)
 print("Completed! Number of followers with location: " + str(count_))

@@ -75,7 +75,7 @@ username_area.send_keys(args.username)
 password_area.send_keys(args.password)
 driver.find_element_by_css_selector("div[data-testid='LoginForm_Login_Button']").click()
 if driver.current_url.find("error") != -1:
-    driver.close()
+    driver.quit()
     sys.exit(t.colored("Wrong Username/Password !", "red"))
 else:
     print(t.colored(" * Login successful ! * ", "green"), end="\r")
@@ -87,7 +87,7 @@ if int(args.min) == -1:
     print("Getting total follower count  " + t.colored(url, "blue"))
     driver.get(url)
     if driver.current_url.find("rate-limited") != -1:
-        driver.close()
+        driver.quit()
         sys.exit(t.colored("Twitter rate limited ! Re-run this script couple seconds later", "red"))
     print("Waiting DOM to get ready...", end = "\r")
     wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
@@ -148,7 +148,7 @@ sleep = 2.5 if args.waitlong is True else 1
 time.sleep(sleep)
 print("Scraping url  " + t.colored(url, "blue"))
 if driver.current_url.find("rate-limited") != -1:
-    driver.close()
+    driver.quit()
     sys.exit(t.colored("Twitter rate limit reached !", "red"))
 print("Waiting DOM to get ready...", end = "\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
@@ -158,7 +158,7 @@ try:
     time.sleep(sleep)
     try_again = column.find_element_by_css_selector("div[aria-label='Timeline: Followers']")
 except NoSuchElementException:
-    driver.close()
+    driver.quit()
     sys.exit(t.colored("No user with name "+args.input+" !", "red"))
 print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
@@ -262,12 +262,12 @@ while count <= max:
                     try:
                         location = spans[2].get_attribute("innerHTML")
                         follower["location"] = location
-                        driver.execute_script("window.close();") 
+                        driver.close()
                         driver.switch_to.window(window_before)
                     except IndexError:
                         total_count += 1
                         names.append(follower["name"])
-                        driver.execute_script("window.close();") 
+                        driver.close()
                         driver.switch_to.window(window_before)
                         continue
                 if follower not in followers.values():
@@ -310,4 +310,4 @@ if args.click is True and args.load is None:
 else:
     print("Completed! Total number of followers: " + str(count))
 json.dump(data, output, indent=4) 
-driver.close()
+driver.quit()
