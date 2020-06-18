@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(
     )
 parser.add_argument("username", metavar="username", help="[REQUIRED] Username of a valid Twitter Account")
 parser.add_argument("password", metavar="password", help="[REQUIRED] Password of a valid Twitter Account")
-parser.add_argument("input", metavar="input", help="[REQUIRED] Topic word, to seach in twitter, to search more than one word add quotes around string")
+parser.add_argument("input", metavar="input", help="[REQUIRED] @name of a profile page")
 parser.add_argument("min", metavar="min", nargs="?", help="Minimum follower count, default 100", default=100)
 parser.add_argument("output", metavar="output", nargs="?", help="Output file name to write tsv, default name followers.json", default="followers.json")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")

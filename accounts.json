@@ -55,27 +55,27 @@
             },
             "1": {
                 "name": "al_watanQatar",
-                "followers_10k": false,
+                "followers_10k": true,
                 "percentage_of_location": 0
             },
             "2": {
                 "name": "QatarTelevision",
-                "followers_10k": false,
+                "followers_10k": true,
                 "percentage_of_location": 0
             },
             "3": {
                 "name": "dohanews",
-                "followers_10k": false,
+                "followers_10k": true,
                 "percentage_of_location": 0
             },
             "4": {
                 "name": "covid19qatar",
-                "followers_10k": false,
+                "followers_10k": true,
                 "percentage_of_location": 0
             },
             "5": {
                 "name": "QNAEnglish",
-                "followers_10k": false,
+                "followers_10k": true,
                 "percentage_of_location": 0
             }
         },
