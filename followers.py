@@ -178,10 +178,21 @@ if args.load is not None:
 else:
     followers = {}
 while count <= max:
+    try:
+        error = column.find_element_by_css_selector("h1[data-testid='error-detail']")
+        driver.quit()
+        sys.exit(t.colored("Can't get followers !", "red"))
+    except NoSuchElementException:
+        pass
     percent = Decimal((count / max) * 100)
     print("Gathering Followers " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
     try:
-        user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
+        try:
+            user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
+        except StaleElementReferenceException:
+            wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
+            column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
+            user_cells = column.find_elements_by_css_selector("div[data-testid='UserCell']")
         for user in user_cells:
             try:
                 main_div = user.find_element_by_css_selector("div.r-16y2uox")
