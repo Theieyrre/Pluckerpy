@@ -3,127 +3,103 @@
         "ministries": {
             "0": {
                 "name": "MofaQatar_AR",
-                "followers_10k": true,
-                "percentage_of_location": 43.36
+                "followers_10k": true
             },
             "1": {
                 "name": "MofaQatar_EN",
-                "followers_10k": true,
-                "percentage_of_location": 80.00
+                "followers_10k": true
             },
             "2": {
                 "name": "MOPHQatar",
-                "followers_10k": true,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "3": {
                 "name": "MOI_Qatar",
-                "followers_10k": true,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "4": {
                 "name": "AwqafM",
-                "followers_10k": true,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "5": {
                 "name": "HukoomiQatar",
-                "followers_10k": true,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "6": {
                 "name": "MOI_QatarEn",
-                "followers_10k": true,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "7": {
                 "name": "MOCIQatar",
-                "followers_10k": true,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "8": {
                 "name": "MOTC_QA",
-                "followers_10k": true,
-                "percentage_of_location": 53.68
+                "followers_10k": true
             }
         },
         "newspapers/media": {
             "0": {
                 "name": "alraya_n",
-                "followers_10k": true,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "1": {
                 "name": "al_watanQatar",
-                "followers_10k": true,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "2": {
                 "name": "QatarTelevision",
-                "followers_10k": true,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "3": {
                 "name": "dohanews",
-                "followers_10k": true,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "4": {
                 "name": "covid19qatar",
-                "followers_10k": true,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "5": {
                 "name": "QNAEnglish",
-                "followers_10k": true,
-                "percentage_of_location": 0
+                "followers_10k": true
             }
         },
         "public/social/institutes": {
             "0": {
                 "name": "QatarUniversity",
-                "followers_10k": false,
-                "percentage_of_location": 0
+                "followers_10k": false
             },
             "1": {
                 "name": "qatarliving",
-                "followers_10k": false,
-                "percentage_of_location": 0
+                "followers_10k": false
             },
             "2": {
                 "name": "OoredooQatar",
-                "followers_10k": false,
-                "percentage_of_location": 0
+                "followers_10k": false
             },
             "3": {
                 "name": "kataraqatar",
-                "followers_10k": false,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "4": {
                 "name": "QatarPrayer",
-                "followers_10k": false,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "5": {
                 "name": "aspirezone",
-                "followers_10k": false,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "6": {
                 "name": "QF",
-                "followers_10k": false,
-                "percentage_of_location": 0
+                "followers_10k": false
             },
             "7": {
                 "name": "qcharity",
-                "followers_10k": false,
-                "percentage_of_location": 0
+                "followers_10k": true
             },
             "8": {
                 "name": "HBKU",
-                "followers_10k": false,
-                "percentage_of_location": 0
+                "followers_10k": true
             }
         }
     }    

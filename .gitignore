@@ -4,3 +4,4 @@ accounts/*.json
 labeled/
 *.json
 !accounts.json
+*.log
