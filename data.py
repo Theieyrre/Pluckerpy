@@ -1,6 +1,9 @@
 import json, sys, argparse
 import termcolor as t
 
+from colorama import init
+init()
+
 parser = argparse.ArgumentParser(
     description='Label followers or update labeled json, default write', 
     formatter_class=argparse.RawTextHelpFormatter, 

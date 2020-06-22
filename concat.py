@@ -1,5 +1,8 @@
-import argparse, json, os, sys
+import argparse, json, os, sys, random
 import termcolor as t
+
+from colorama import init
+init()
 
 # Parse Arguments and Print Help
 
@@ -8,48 +11,71 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter, 
     epilog="Example of usage:\npython concat.py account1.json account2.json account3.json\n"
     )
-parser.add_argument("jsons", metavar="jsons", nargs="*", help="Names of json files seperated with space")
+parser.add_argument("dir", metavar="dir", help="Names of json files seperated with space")
 parser.add_argument("-o", "--output", metavar="output", nargs="?", help="Output file name to concat all, default output.json", default="output.json")
+parser.add_argument("-v", "--verbose", action="store_true", help="Verbose for extra prints")
 args = parser.parse_args()
-files = []
+files = os.listdir(args.dir)
+
+if args.verbose is not None:
+    print("List of all files inside directory: " + t.colored(args.dir))
+    print(files)
 followers = []
 
-# Translate to json
-
-for file in args.jsons:
-    if  file.find(".json") == -1:
-        if file.find("."):
-            file = file.split(".")[0] + ".json"
-            print(t.colored("Non json file given as output format. Changing to " + file, "yellow"))
-        else:
-            file = file + ".json"
-    files.append(file)
-
 # Get output filename
-
-if  args.output.find(".json") == -1:
-    if args.output.find("."):
-        outputname = args.output.split(".")[0] + ".json"
-        print(t.colored("Non json file given as output format. Changing to " + outputname, "yellow"))
+output = args.output
+if  output.find(".json") == -1:
+    if output.find("."):
+        output = output.split(".")[0] + ".json"
+        print(t.colored("Non json file given as output format. Changing to " + output, "yellow"))
     else:
-        outputname = args.output + ".json"
-output = open(outputname, "w")
+        output = output + ".json"
+output = open(output, "w")
 
 # Create data to concat jsons
 
-data = {"filenames": [i.split(".")[0] for i in files]}
+data = {}
+
+# Priority json names
+
+priority = ['TamimBinHamad', 'dohanews', 'covid19qatar', 'QatarUniversity', 'qatarliving', 'QF', 'qcharity', 'HBKU']
+priority = [p+".json" for p in priority]
 
 # Read and concat files
 
+weight, count, total = 375, 0, 0
 for filename in files:
-    if not os.path.isfile(filename):
-        sys.exit(t.colored(filename + " is not a file ! ", "red"))
+    if filename not in priority:
+        weight = 375
     else:
-        with open(filename, "r") as file:
+        weight = 750
+    if not os.path.isfile(args.dir + "/" + filename):
+        sys.exit(t.colored(args.dir + "/" + filename + " is not a file ! ", "red"))
+    else:
+        with open(args.dir + "/" + filename, "r") as file:
             datajson = json.load(file)
-            for follower in datajson["followers"].values():
+            if args.verbose is not None:
+                print("Filename: " + t.colored(filename, "yellow") + ", Weight: " + t.colored(weight, "yellow") + ", Total: " + t.colored(total, "green"))
+            shuffle_list = list(datajson["followers"].values())
+            random.shuffle(shuffle_list)
+            for follower in shuffle_list:
                 followers.append(follower)
-data["followers"] = followers
+                count += 1
+                total += 1
+                if count == weight:
+                    break
+    count = 0
+
+# Remove duplicates
+
+unique_followers= []
+print("Removing duplicates...", end='\r')
+[unique_followers.append(x) for x in followers if x not in unique_followers]
+total = len(unique_followers)
+print("Removing duplicates..." + t.colored("Done", "green"))
+
+data["followers"] = unique_followers
+print(t.colored("Completed!\n") + "Total number of accounts: " + t.colored(total, "green"))
 json.dump(data, output, indent=4)
 
 

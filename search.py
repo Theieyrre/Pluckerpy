@@ -14,6 +14,9 @@ from selenium.webdriver.common.keys import Keys
 import pandas as pd
 import termcolor as t
 
+from colorama import init
+init()
+
 # Parse Arguments and Print Help
 
 parser = argparse.ArgumentParser(

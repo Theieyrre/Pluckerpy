@@ -4,6 +4,9 @@ from decimal import Decimal
 from os import path
 import json
 
+from colorama import init
+init()
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait

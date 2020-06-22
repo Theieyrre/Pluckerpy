@@ -3,6 +3,9 @@ import argparse, sys, json
 import termcolor as t
 import pandas as pd
 
+from colorama import init
+init()
+
 # Parse Arguments and Print Help
 
 parser = argparse.ArgumentParser(

@@ -12,6 +12,9 @@ from selenium.common.exceptions import TimeoutException
 
 import termcolor as t
 
+from colorama import init
+init()
+
 # Parse Arguments and Print Help
 
 parser = argparse.ArgumentParser(
