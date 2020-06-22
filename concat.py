@@ -16,8 +16,8 @@ parser.add_argument("-o", "--output", metavar="output", nargs="?", help="Output 
 parser.add_argument("-v", "--verbose", action="store_true", help="Verbose for extra prints")
 args = parser.parse_args()
 files = os.listdir(args.dir)
-
-if args.verbose is not None:
+print(args)
+if args.verbose is True:
     print("List of all files inside directory: " + t.colored(args.dir))
     print(files)
 followers = []
@@ -30,7 +30,6 @@ if  output.find(".json") == -1:
         print(t.colored("Non json file given as output format. Changing to " + output, "yellow"))
     else:
         output = output + ".json"
-output = open(output, "w")
 
 # Create data to concat jsons
 
@@ -43,18 +42,18 @@ priority = [p+".json" for p in priority]
 
 # Read and concat files
 
-weight, count, total = 375, 0, 0
+weight, count, total = 330, 0, 0
 for filename in files:
     if filename not in priority:
-        weight = 375
+        weight = 330
     else:
-        weight = 750
+        weight = 660
     if not os.path.isfile(args.dir + "/" + filename):
         sys.exit(t.colored(args.dir + "/" + filename + " is not a file ! ", "red"))
     else:
         with open(args.dir + "/" + filename, "r") as file:
             datajson = json.load(file)
-            if args.verbose is not None:
+            if args.verbose is True:
                 print("Filename: " + t.colored(filename, "yellow") + ", Weight: " + t.colored(weight, "yellow") + ", Total: " + t.colored(total, "green"))
             shuffle_list = list(datajson["followers"].values())
             random.shuffle(shuffle_list)
@@ -76,6 +75,7 @@ print("Removing duplicates..." + t.colored("Done", "green"))
 
 data["followers"] = unique_followers
 print(t.colored("Completed!\n") + "Total number of accounts: " + t.colored(total, "green"))
+output = open(output, "w")
 json.dump(data, output, indent=4)
 
 

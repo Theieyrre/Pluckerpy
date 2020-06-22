@@ -39,7 +39,8 @@ python search.py github 50 test
 ```
 python profile.py github 50 test
 ```
-To get all tweets of a user, set min to -1
+To get all tweets of a user, set min to -1  
+username and password arguments are used for getting total number of tweets. They are non-optional even without -1 tweet count
 
 | Parameters   |      Description      |
 |----------|:-------------:|
@@ -59,7 +60,8 @@ To get all tweets of a user, set min to -1
 python followers.py pluckerpy password123 github 50 test
 ```
 
-To get all followers of a user, set min to -1
+To get all followers of a user, set min to -1  
+username and password arguments are used for getting total number of follower. They are non-optional even without -1 follower count
 
 | Parameters   |      Description      |
 |----------|:-------------:|
@@ -79,7 +81,9 @@ To get all followers of a user, set min to -1
 python clean.py followers.json followers name
 ```
 clean.py will return UnicodeDecodeErro if another application is used to change unicode escape characters  
-variable and spaces are mutually exclusive, can't be used together
+variable and spaces are mutually exclusive, can't be used together  
+concat.py remove duplicates across multiple jsons  
+Doesn't work on lists, dictionaries only
 
 | Parameters   |      Description      |
 |----------|:-------------:|
@@ -102,11 +106,12 @@ Write and update are mutually exclusive, can't be used together
 
 ### Concatenate JSON Files
 ```
-python concat.py first.json second.json third.json
+python concat.py directory_of_jsons
 ```
 
 If file name has whitespace, type it inside quote marks
 | Parameters   |      Description      |
 |----------|:-------------:|
-| jsons |  Names of json files seperated with space |
+| directory |  Directory path with json files |
 | -o, --output |  Output file name to concat all, default output.json |
+| -v, --verbose |  Extra prints with weights and counts |
