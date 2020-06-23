@@ -106,7 +106,7 @@ Write and update are mutually exclusive, can't be used together
 
 ### Concatenate JSON Files
 ```
-python concat.py directory_of_jsons
+python concat.py directory_of_jsons 
 ```
 
 If file name has whitespace, type it inside quote marks
@@ -115,3 +115,18 @@ If file name has whitespace, type it inside quote marks
 | directory |  Directory path with json files |
 | -o, --output |  Output file name to concat all, default output.json |
 | -v, --verbose |  Extra prints with weights and counts |
+
+### Get profiles from json
+```
+python profiles_from_json.py plucker pass123 json_from_concat.json directory_name
+```
+
+If file name has whitespace, type it inside quote marks
+| Parameters   |      Description      |
+|----------|:-------------:|
+| username |  [REQUIRED] Username of a valid Twitter Account |
+| password |  [REQUIRED] Password of a valid Twitter Account |
+| jsonfile |  [REQUIRED] JSON output of concat.py |
+| directory |  [REQUIRED] Directory name to make and download in |
+| -b, --browser | Option to open Chrome window |
+|-w, --waitlong | Option to wait more than 10 seconds on loading elements.<br>Will reduce runtime significantly ! Use only have slow connection |

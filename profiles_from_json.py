@@ -7,9 +7,10 @@ parser = argparse.ArgumentParser(
     )
 parser.add_argument("username", metavar="username", help="[REQUIRED] Username of a valid Twitter Account")
 parser.add_argument("password", metavar="password", help="[REQUIRED] Password of a valid Twitter Account")
-parser.add_argument("jsonfile", metavar="jsonfile", help="JSON output of concat.py")
-parser.add_argument("directory", metavar="directory", help="Directory name to make and download in")
+parser.add_argument("jsonfile", metavar="jsonfile", help="[REQUIRED] JSON output of concat.py")
+parser.add_argument("directory", metavar="directory", help="[REQUIRED] Directory name to make and download in")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
+parser.add_argument("-w", "--waitlong", action='store_true', help="Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection")
 args = parser.parse_args()
 
 inputjson = open(args.jsonfile, "r")
@@ -29,5 +30,7 @@ for follower in followers:
     ]
     if args.browser is True:
         options.append('-b')
+    if args.waitlong is True:
+        options.append('-w')
     options = " ".join(options)
     os.system('python profile.py ' + options)

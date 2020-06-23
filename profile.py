@@ -92,9 +92,8 @@ try:
     wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[aria-label*='Timeline']")))
     try_again = column.find_element_by_css_selector("div[aria-label*='Timeline']")
 except NoSuchElementException:
-    pass
-    driver.close()
-    sys.exit(t.colored("No user or locked account with name "+args.input+" !", "red"))
+    #driver.close()
+    sys.exit(t.colored("No user/locked account/no tweets with name "+args.input+" !", "red"))
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "h2[aria-level='2']")))
 print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
@@ -357,7 +356,7 @@ while not_over:
                     print(t.colored("Saving data to CSV file","yellow"), end="\r")
                     output.seek(0)
                     json.dump(data, output, indent=4)
-                    threhold = 0
+                    threshold = 0
                 not_over = count < max
             except StaleElementReferenceException:
                 print(t.colored("Page Structure changed !", "red"))
