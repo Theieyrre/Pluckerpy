@@ -93,8 +93,8 @@ try:
     try_again = column.find_element_by_css_selector("div[aria-label*='Timeline']")
 except NoSuchElementException:
     pass
-    #driver.close()
-    #sys.exit(t.colored("No user or locked account with name "+args.input+" !", "red"))
+    driver.close()
+    sys.exit(t.colored("No user or locked account with name "+args.input+" !", "red"))
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "h2[aria-level='2']")))
 print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
@@ -176,17 +176,22 @@ count,  threshold = 0 , 0
 tweets = {}
 variable = {}
 last_height = driver.execute_script("return document.body.scrollHeight")
-if int(args.min) == -1:
-    letter = total_tweets[-1]
-    if letter == "K":
-        max = float(total_tweets[:-1]) * 1000 + 100
-    elif letter == "M":
-        max = float(total_tweets[:-1]) * 1000000 + 10000
-    else:
-        max = int(total_tweets)
+letter = total_tweets[-1]
+if letter == "K":
+    total_max = float(total_tweets[:-1]) * 1000 + 100
+elif letter == "M":
+    total_max = float(total_tweets[:-1]) * 1000000 + 10000
 else:
-    max = int(args.min)
-while count <= max:
+    total_max = int(total_tweets)
+if int(args.min) == -1:
+    max = total_max
+else:
+    max = min(int(args.min), total_max)
+if int(args.min) != max:
+    print(args.input + " doesn't have " + t.colored(args.min,"yellow") + " tweets, Getting maximum " + t.colored(max, "green")+ " tweets")
+
+not_over = True
+while not_over:
     percent = Decimal((count / max) * 100)
     print("Gathering Tweets  " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
     wait.until(presence_of_element_located((By.CSS_SELECTOR, "article")))
@@ -207,6 +212,7 @@ while count <= max:
                         print(t.colored("Saving data to CSV file","yellow"), end="\r")
                         output.seek(0)
                         json.dump(data, output, indent=4) 
+                        threshold = 0
                     continue
                 date = html_a.find_element_by_css_selector("time").get_attribute("datetime")
                 name_id = html_a.get_attribute("href").split("/")
@@ -351,8 +357,8 @@ while count <= max:
                     print(t.colored("Saving data to CSV file","yellow"), end="\r")
                     output.seek(0)
                     json.dump(data, output, indent=4)
-                if count >= max:
-                    break  
+                    threhold = 0
+                not_over = count < max
             except StaleElementReferenceException:
                 print(t.colored("Page Structure changed !", "red"))
                 articles = column.find_elements_by_css_selector("article")
@@ -367,6 +373,8 @@ while count <= max:
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(2)
     new_height = driver.execute_script("return document.body.scrollHeight")
+    if new_height == last_height:
+        break
     last_height = new_height
 output.seek(0)
 print("Completed! Total number of tweets: " + str(count))

@@ -25,7 +25,7 @@ for follower in followers:
         args.password,
         follower["name"],
         str(5000),
-        args.directory + "/" + follower["name"]
+        args.directory + "/" + follower["name"] + ".json"
     ]
     if args.browser is True:
         options.append('-b')
