@@ -16,7 +16,7 @@ parser.add_argument("-o", "--output", metavar="output", nargs="?", help="Output 
 parser.add_argument("-v", "--verbose", action="store_true", help="Verbose for extra prints")
 args = parser.parse_args()
 files = os.listdir(args.dir)
-print(args)
+
 if args.verbose is True:
     print("List of all files inside directory: " + t.colored(args.dir))
     print(files)
@@ -42,12 +42,12 @@ priority = [p+".json" for p in priority]
 
 # Read and concat files
 
-weight, count, total = 330, 0, 0
+weight, count, total = 340, 0, 0
 for filename in files:
     if filename not in priority:
-        weight = 330
+        weight = 340
     else:
-        weight = 660
+        weight = 680
     if not os.path.isfile(args.dir + "/" + filename):
         sys.exit(t.colored(args.dir + "/" + filename + " is not a file ! ", "red"))
     else:
@@ -58,11 +58,12 @@ for filename in files:
             shuffle_list = list(datajson["followers"].values())
             random.shuffle(shuffle_list)
             for follower in shuffle_list:
-                followers.append(follower)
-                count += 1
-                total += 1
-                if count == weight:
-                    break
+                if not follower["is_locked"]:
+                    followers.append(follower)
+                    count += 1
+                    total += 1
+                    if count == weight:
+                        break
     count = 0
 
 # Remove duplicates
