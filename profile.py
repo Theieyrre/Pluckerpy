@@ -65,10 +65,7 @@ print("Starting Chrome Web Driver..." + t.colored("Done", "green"))
 url = "https://twitter.com/login"
 print("Waiting page to open...", end = "\r")
 driver.get(url)
-if args.waitlong is True:
-    wait = WebDriverWait(driver, 25)
-else:
-    wait = WebDriverWait(driver, 10)
+wait = WebDriverWait(driver, 25) if args.waitlong is True else WebDriverWait(driver, 10)
 print("Waiting page to open..." + t.colored("Done", "green"))
 print("Entering credentials...", end="\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "input[name='session[username_or_email]']")))
@@ -95,8 +92,9 @@ try:
     wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[aria-label*='Timeline']")))
     try_again = column.find_element_by_css_selector("div[aria-label*='Timeline']")
 except NoSuchElementException:
-    driver.close()
-    sys.exit(t.colored("No user or locked account with name "+args.input+" !", "red"))
+    pass
+    #driver.close()
+    #sys.exit(t.colored("No user or locked account with name "+args.input+" !", "red"))
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "h2[aria-level='2']")))
 print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 

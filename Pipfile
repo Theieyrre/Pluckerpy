@@ -10,7 +10,7 @@ pylint = "*"
 selenium = "*"
 pandas = "*"
 termcolor = "*"
-tqdm = "*"
+colorama = "*"
 
 [requires]
 python_version = "3.8"
