@@ -41,8 +41,6 @@ if  output.find(".json") == -1:
         print(t.colored("Non json file given as output format. Changing to " + output, "yellow"))
     else:
         output = output + ".json"
-output = open(output, "w")
-
 # Create Dictionary
 
 data = {}
@@ -110,6 +108,7 @@ if args.log is not True:
 
 # Scrap profile data
 
+output = open(output, "w")
 time.sleep(2)
 header = column.find_element_by_css_selector("h2[aria-level='2']")
 profile = header.find_element_by_xpath("..")
@@ -192,7 +191,7 @@ if letter == "K":
 elif letter == "M":
     total_max = float(total_tweets[:-1]) * 1000000 + 10000
 else:
-    total_max = int(total_tweets)
+    total_max = int(float(total_tweets))
 if int(args.min) == -1:
     max = total_max
 else:
@@ -220,7 +219,8 @@ while not_over:
                     threshold += 1
                     count += 1
                     if threshold > int(args.threshold):
-                        print(t.colored("Saving data to CSV file","yellow"), end="\r")
+                        if args.log is not True:
+                            print(t.colored("Saving data to CSV file","yellow"), end="\r")
                         output.seek(0)
                         json.dump(data, output, indent=4) 
                         threshold = 0
@@ -365,7 +365,8 @@ while not_over:
                     count += 1
                     threshold += 1
                 if threshold > int(args.threshold):
-                    print(t.colored("Saving data to CSV file","yellow"), end="\r")
+                    if args.log is not True:
+                        print(t.colored("Saving data to CSV file","yellow"), end="\r")
                     output.seek(0)
                     json.dump(data, output, indent=4)
                     threshold = 0
