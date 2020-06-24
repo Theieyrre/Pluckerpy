@@ -31,6 +31,7 @@ parser.add_argument("-b", "--browser", action='store_true', help="Option to open
 parser.add_argument("-t", "--threshold", metavar="threshold", nargs="?", help="Threshold to write to output file default 100", default=100)
 parser.add_argument("-c", "--click", action='store_true', help="Option to open tweet on new tab to get location")
 parser.add_argument("-w", "--waitlong", action='store_true', help="Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection")
+parser.add_argument("-l", "--log", action='store_true', help="Remove extra prints to clean log file")
 args = parser.parse_args()
 
 output = args.output
@@ -48,26 +49,32 @@ data = {}
 
 # Web Driver Options
 
-print("Creating Chrome Web Driver...", end = "\r")
+if args.log is not True:
+    print("Creating Chrome Web Driver...", end = "\r")
 options = webdriver.ChromeOptions()
 options.binary_location = r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
 if args.browser is not True:
     options.add_argument('--headless')
 options.add_argument("--lang=en")
 options.add_experimental_option('excludeSwitches', ['enable-logging'])
-print("Creating Chrome Web Driver..." + t.colored("Done", "green"))
+if args.log is not True:
+    print("Creating Chrome Web Driver..." + t.colored("Done", "green"))
 
 # Start Chrome WebDriver
 
-print("Starting Chrome Web Driver...", end = "\r")
+if args.log is not True:
+    print("Starting Chrome Web Driver...", end = "\r")
 driver = webdriver.Chrome(executable_path=r'chromedriver.exe', options=options)
-print("Starting Chrome Web Driver..." + t.colored("Done", "green"))
+if args.log is not True:
+    print("Starting Chrome Web Driver..." + t.colored("Done", "green"))
 url = "https://twitter.com/login"
-print("Waiting page to open...", end = "\r")
+if args.log is not True:
+    print("Waiting page to open...", end = "\r")
 driver.get(url)
 wait = WebDriverWait(driver, 25) if args.waitlong is True else WebDriverWait(driver, 10)
-print("Waiting page to open..." + t.colored("Done", "green"))
-print("Entering credentials...", end="\r")
+if args.log is not True:
+    print("Waiting page to open..." + t.colored("Done", "green"))
+    print("Entering credentials...", end="\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "input[name='session[username_or_email]']")))
 username_area = driver.find_element_by_css_selector("input[name='session[username_or_email]']")
 password_area = driver.find_element_by_css_selector("input[name='session[password]']")
@@ -78,24 +85,28 @@ if driver.current_url.find("error") != -1:
     driver.close()
     sys.exit(t.colored("Wrong Username/Password !", "red"))
 else:
-    print(t.colored(" * Login successful ! * ", "green"), end="\r")
+    if args.log is not True:
+        print(t.colored(" * Login successful ! * ", "green"), end="\r")
 url = "https://twitter.com/" + args.input + "/with_replies"
-print("Waiting page to open...", end = "\r")
+if args.log is not True:
+    print("Waiting page to open...", end = "\r")
 driver.get(url)
 wait = WebDriverWait(driver, 10)
-print("Waiting page to open..." + t.colored("Done", "green"))
-print("Scraping url  " + t.colored(url, "blue"))
-print("Waiting DOM to get ready...", end = "\r")
+if args.log is not True:
+    print("Waiting page to open..." + t.colored("Done", "green"))
+    print("Scraping url  " + t.colored(url, "blue"))
+    print("Waiting DOM to get ready...", end = "\r")
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[data-testid='primaryColumn']")))
 column = driver.find_element_by_css_selector("div[data-testid='primaryColumn']")
 try:
-    wait.until(presence_of_element_located((By.CSS_SELECTOR, "div[aria-label*='Timeline']")))
-    try_again = column.find_element_by_css_selector("div[aria-label*='Timeline']")
-except NoSuchElementException:
-    #driver.close()
+    wait.until(presence_of_element_located((By.CSS_SELECTOR, "article")))
+    try_again = column.find_element_by_css_selector("article")
+except TimeoutException:
+    driver.close()
     sys.exit(t.colored("No user/locked account/no tweets with name "+args.input+" !", "red"))
 wait.until(presence_of_element_located((By.CSS_SELECTOR, "h2[aria-level='2']")))
-print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
+if args.log is not True:
+    print("Waiting DOM to get ready..." + t.colored("Ready", "green"))
 
 # Scrap profile data
 
@@ -192,7 +203,8 @@ if int(args.min) != max:
 not_over = True
 while not_over:
     percent = Decimal((count / max) * 100)
-    print("Gathering Tweets  " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
+    if args.log is not True:
+        print("Gathering Tweets  " + t.colored(str(round(percent,1)) + "%","magenta"), end="\r")
     wait.until(presence_of_element_located((By.CSS_SELECTOR, "article")))
     articles = column.find_elements_by_css_selector("article")
     if len(articles) == 0:
@@ -359,7 +371,6 @@ while not_over:
                     threshold = 0
                 not_over = count < max
             except StaleElementReferenceException:
-                print(t.colored("Page Structure changed !", "red"))
                 articles = column.find_elements_by_css_selector("article")
                 continue
     except TimeoutException:

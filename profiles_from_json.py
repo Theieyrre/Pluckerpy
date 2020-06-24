@@ -11,6 +11,7 @@ parser.add_argument("jsonfile", metavar="jsonfile", help="[REQUIRED] JSON output
 parser.add_argument("directory", metavar="directory", help="[REQUIRED] Directory name to make and download in")
 parser.add_argument("-b", "--browser", action='store_true', help="Option to open Chrome window to view tweets")
 parser.add_argument("-w", "--waitlong", action='store_true', help="Option to wait more than 10 seconds on loading elements. Will reduce runtime significantly ! Use only have slow connection")
+parser.add_argument("-l", "--log", action='store_true', help="Remove extra prints to clean log file")
 args = parser.parse_args()
 
 inputjson = open(args.jsonfile, "r")
@@ -32,5 +33,7 @@ for follower in followers:
         options.append('-b')
     if args.waitlong is True:
         options.append('-w')
+    if args.log is True:
+        options.append('-l')
     options = " ".join(options)
     os.system('python profile.py ' + options)
