@@ -32,18 +32,20 @@ if  filename.find(".json") == -1 and len(filename) != 0:
 account = {}
 
 main_name, name = "", ""
-tr_index, amb_index = 0, 0
-tr_dict, amb_dict = {}, {}
+qatar_index, expat_index, other_index = 0, 0, 0
+qatar_dict, expat_dict, other_dict = {}, {}, {}
 if args.update is True:
     try:
         filejson = open(filename,"r")
     except FileNotFoundError:
         sys.exit(t.colored("File not found to update !", "red"))
     data = json.load(filejson)
-    tr_dict = data["tr_followers"]
-    tr_index = len(tr_dict)
-    amb_dict = data["amb_followers"]
-    amb_index = len(amb_dict)
+    qatar_dict = data["qatar_followers"]
+    qatar_index = len(qatar_dict)
+    expat_dict = data["expat_followers"]
+    expat_index = len(expat_dict)
+    other_dict = data["other_followers"]
+    other_index = len(other_dict)
     main_name = data["screen_name"]
     name = data["name"]
 else:
@@ -57,23 +59,25 @@ account["name"] = name
 while True:
     follower = {}
     try:
-        f_main_name = input("Enter follower screen name: ")
-        follower["screen_name"] = f_main_name
-        f_name = input("Enter account name: ")
+        f_name = input("Enter follower name: ")
         follower["name"] = f_name
         f_label = input("Enter label: ")
         follower["label"] = f_label
-        f_list = input("Enter list name:(T/A) ")
-        if f_list.lower() == "t":
-            tr_dict[tr_index] = follower
-            tr_index += 1
-        elif f_list.lower() == "a":
-            amb_dict[amb_index] = follower
-            amb_index += 1
+        f_list = input("Enter list name:(0,1,2) ")
+        if f_list == '0':
+            qatar_dict[qatar_index] = follower
+            qatar_index += 1
+        elif f_list == '1':
+            expat_dict[expat_index] = follower
+            expat_index += 1
+        elif f_list == '2':
+            other_dict[other_index] = follower
+            other_index += 1
     except KeyboardInterrupt:
         print(t.colored("Followers complete !", "yellow"))
-        account["tr_followers"] = tr_dict
-        account["amb_followers"] = amb_dict
+        account["qatar_followers"] = qatar_dict
+        account["expat_followers"] = expat_dict
+        account["other_followers"] = other_dict
         break
 
 if len(filename) != 0:

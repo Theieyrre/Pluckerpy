@@ -191,7 +191,7 @@ if letter == "K":
 elif letter == "M":
     total_max = float(total_tweets[:-1]) * 1000000 + 10000
 else:
-    total_max = int(float(total_tweets))
+    total_max = int(float(total_tweets.replace(",","")))
 if int(args.min) == -1:
     max = total_max
 else:

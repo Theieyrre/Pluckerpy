@@ -22,6 +22,8 @@ except FileExistsError:
 
 followers = json.load(inputjson)["followers"]
 for follower in followers:
+    if len(os.listdir(args.directory)) == 10000:
+        break
     options = [
         args.username,
         args.password,

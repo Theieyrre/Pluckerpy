@@ -42,12 +42,12 @@ priority = [p+".json" for p in priority]
 
 # Read and concat files
 
-weight, count, total = 340, 0, 0
+weight, count, total = 600, 0, 0
 for filename in files:
     if filename not in priority:
-        weight = 340
+        weight = 700
     else:
-        weight = 680
+        weight = 1400
     if not os.path.isfile(args.dir + "/" + filename):
         sys.exit(t.colored(args.dir + "/" + filename + " is not a file ! ", "red"))
     else:
